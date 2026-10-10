@@ -405,7 +405,7 @@ test("authentication recovery and Google expose configuration honestly", async (
 test("narrow phones, tablets and laptops keep product surfaces usable", async ({
   page,
 }) => {
-  for (const width of [320, 768, 1280]) {
+  for (const width of [320, 375, 390, 768, 1024, 1280, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     for (const path of ["/", "/chat", "/dashboard", "/documents", "/signup"]) {
       await page.goto(path);
@@ -430,4 +430,64 @@ test("narrow phones, tablets and laptops keep product surfaces usable", async ({
       }
     }
   }
+});
+
+test("language selector switches the interface and persists across refresh", async ({
+  page,
+}, info) => {
+  await page.goto("/");
+  const selectLanguage = async (name: string) => {
+    if (info.project.name === "mobile") {
+      const trigger = page.locator("header > div > button").last();
+      if (!(await page.getByRole("dialog").isVisible())) await trigger.click();
+      await page
+        .getByRole("dialog")
+        .locator('button[aria-haspopup="menu"]')
+        .first()
+        .click();
+    } else {
+      await page.locator('button[aria-haspopup="menu"]').first().click();
+    }
+    await page.getByRole("menuitemradio", { name }).click();
+  };
+  await selectLanguage("हिन्दी");
+  await expect(page.getByRole("heading", { level: 1 })).toContainText(
+    "आपका अगला अध्याय",
+  );
+  await page.reload();
+  if (info.project.name === "mobile") {
+    await page.locator("header > div > button").last().click();
+  }
+  await expect(
+    info.project.name === "mobile"
+      ? page.getByRole("dialog").getByRole("link", { name: "खोजें" })
+      : page
+          .getByRole("navigation", { name: "मुख्य नेविगेशन" })
+          .getByRole("link", { name: "खोजें" }),
+  ).toBeVisible();
+
+  for (const [language, heading] of [
+    ["తెలుగు", "మీ తదుపరి అధ్యాయం"],
+    ["தமிழ்", "உங்கள் அடுத்த அத்தியாயம்"],
+    ["English", "Your next chapter"],
+  ]) {
+    await selectLanguage(language);
+    await expect(page.getByRole("heading", { level: 1 })).toContainText(
+      heading,
+    );
+  }
+});
+
+test("changing language during a chat request preserves its conversation and URL", async ({ page }) => {
+  await page.goto("/chat");
+  const composer = page.getByRole("textbox", { name: "Your question for Admitics" });
+  await composer.fill("Help me choose a next step while I change languages.");
+  await page.getByRole("button", { name: "Send question" }).click();
+  await page.getByRole("button", { name: "Choose language" }).click();
+  await page.getByRole("menuitemradio", { name: "हिन्दी" }).click();
+  await expect(page).toHaveURL(/\/chat\?id=/);
+  const conversationUrl = page.url();
+  await expect(page.getByRole("article", { name: "Admitics का जवाब" })).toBeVisible({ timeout: 15000 });
+  await expect(page).toHaveURL(conversationUrl);
+  await expect(page.locator("article").filter({ hasText: "Help me choose a next step" })).toBeVisible();
 });

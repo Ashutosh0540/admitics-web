@@ -9,14 +9,16 @@ import {
   ErrorState,
   LoadingState,
 } from "@/components/ui/primitives";
+import { useTranslation } from "@/lib/i18n";
 
 export function AccountGate({ children }: { children: ReactNode }) {
   const { user, loading, error } = useAuth();
   const pathname = usePathname();
+  const t = useTranslation();
   if (loading)
     return (
       <div id="main-content" className="container-page py-16">
-        <LoadingState label="Restoring your session…" />
+        <LoadingState label={t("common.loading")} />
       </div>
     );
   if (error)
@@ -29,11 +31,11 @@ export function AccountGate({ children }: { children: ReactNode }) {
     return (
       <div id="main-content" className="container-page max-w-2xl py-16">
         <EmptyState
-          title="Your next chapter has a place here."
-          description="Log in to save your conversations, use your documents, and keep your guidance together."
+          title={t("dashboard.waiting")}
+          description={t("dashboard.waitingCopy")}
           action={
             <ButtonLink href={`/login?next=${encodeURIComponent(pathname)}`}>
-              Log in to continue
+              {t("nav.logIn")}
             </ButtonLink>
           }
         />

@@ -1,5 +1,7 @@
+"use client";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/lib/i18n";
 
 export function BrandMark({ className }: { className?: string }) {
   return (
@@ -22,10 +24,11 @@ export function BrandMark({ className }: { className?: string }) {
   );
 }
 export function Logo({ light = false }: { light?: boolean }) {
+  const t = useTranslation();
   return (
     <Link
       href="/"
-      aria-label="Admitics home"
+      aria-label={`${t("nav.exploreAdmitics")} · Admitics`}
       className={cn(
         "inline-flex items-center gap-2.5",
         light ? "text-white" : "text-brand",

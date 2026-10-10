@@ -11,7 +11,7 @@ architecture targets are recorded below, not simulated.
 ## Common wire rules
 
 - All protected calls use a current Supabase user access token in `Authorization:
-  Bearer …`. No API cookies, refresh tokens, or publishable key are sent to the Worker.
+Bearer …`. No API cookies, refresh tokens, or publishable key are sent to the Worker.
 - Success: `{success:true,data:…}`. Error:
   `{success:false,error:{code,message,requestId}}`. Partial AI failure also includes
   `data.userMessageId`. HTTP 204 has no body.
@@ -32,23 +32,23 @@ architecture targets are recorded below, not simulated.
 
 All operations below require a verified bearer. GET resources also support HEAD.
 
-| Frontend operation | Actual method/path | Request | Successful `data` |
-| --- | --- | --- | --- |
-| Create conversation | POST `/api/v1/conversations` | `{title?}` | `{conversation}`; 201 |
-| List conversations | GET `/api/v1/conversations` | `limit,cursor` | `{conversations,nextCursor}` |
-| Get conversation | GET `/api/v1/conversations/:id` | None | `{conversation}` |
-| Rename conversation | PATCH `/api/v1/conversations/:id` | `{title}` | `{conversation}` |
-| Delete conversation | DELETE `/api/v1/conversations/:id` | Empty | 204; cascades messages |
-| List messages | GET `/api/v1/conversations/:id/messages` | `limit,cursor` | `{messages,nextCursor}` |
-| Send message | POST `/api/v1/conversations/:id/messages` | `{content,role?:"user"}`; optional idempotency header | `{message,assistantMessage?,ai?,knowledge?}`; 201 |
-| Verify identity | GET `/api/v1/auth/me` | None | `{user:{id,email,role,provider}}` |
-| Get usage | GET `/api/v1/usage` | None | `{usage:{periodStart,periodEnd,limits,used}}` |
-| Upload document | POST `/api/v1/documents/upload` | Raw bytes and upload headers | `{document,deduplicated}`; 201 |
-| List documents | GET `/api/v1/documents` | `limit,cursor` | `{documents,nextCursor}` |
-| Get document | GET `/api/v1/documents/:id` | None | `{document}` |
-| Process document | POST `/api/v1/documents/:id/process` | Empty | `{document,queued:true}`; 202 |
-| Retry failed document | POST `/api/v1/documents/:id/retry` | Empty | `{document,queued:true}`; 202 |
-| Delete document | DELETE `/api/v1/documents/:id` | Empty | 204; repeat owned tombstone deletion succeeds |
+| Frontend operation    | Actual method/path                        | Request                                               | Successful `data`                                 |
+| --------------------- | ----------------------------------------- | ----------------------------------------------------- | ------------------------------------------------- |
+| Create conversation   | POST `/api/v1/conversations`              | `{title?}`                                            | `{conversation}`; 201                             |
+| List conversations    | GET `/api/v1/conversations`               | `limit,cursor`                                        | `{conversations,nextCursor}`                      |
+| Get conversation      | GET `/api/v1/conversations/:id`           | None                                                  | `{conversation}`                                  |
+| Rename conversation   | PATCH `/api/v1/conversations/:id`         | `{title}`                                             | `{conversation}`                                  |
+| Delete conversation   | DELETE `/api/v1/conversations/:id`        | Empty                                                 | 204; cascades messages                            |
+| List messages         | GET `/api/v1/conversations/:id/messages`  | `limit,cursor`                                        | `{messages,nextCursor}`                           |
+| Send message          | POST `/api/v1/conversations/:id/messages` | `{content,role?:"user"}`; optional idempotency header | `{message,assistantMessage?,ai?,knowledge?}`; 201 |
+| Verify identity       | GET `/api/v1/auth/me`                     | None                                                  | `{user:{id,email,role,provider}}`                 |
+| Get usage             | GET `/api/v1/usage`                       | None                                                  | `{usage:{periodStart,periodEnd,limits,used}}`     |
+| Upload document       | POST `/api/v1/documents/upload`           | Raw bytes and upload headers                          | `{document,deduplicated}`; 201                    |
+| List documents        | GET `/api/v1/documents`                   | `limit,cursor`                                        | `{documents,nextCursor}`                          |
+| Get document          | GET `/api/v1/documents/:id`               | None                                                  | `{document}`                                      |
+| Process document      | POST `/api/v1/documents/:id/process`      | Empty                                                 | `{document,queued:true}`; 202                     |
+| Retry failed document | POST `/api/v1/documents/:id/retry`        | Empty                                                 | `{document,queued:true}`; 202                     |
+| Delete document       | DELETE `/api/v1/documents/:id`            | Empty                                                 | 204; repeat owned tombstone deletion succeeds     |
 
 Conversation projection: `id,userId,title,createdAt,updatedAt`.
 Message projection: `id,conversationId,role,content,createdAt`.
@@ -107,16 +107,25 @@ and assessment. The mapper only renders those records; it does not infer verifie
 sources from model prose or fabricate URLs/dates. Backend `not_evaluated` is not a
 factual correctness claim.
 
-| Frontend/frozen expectation | Backend reality | Required action |
-| --- | --- | --- |
-| Frozen `/api/v1/me` application profile | Only `/api/v1/auth/me` identity exists; no name/createdAt/profile projection | Use verified identity now. Confirm/add an application-profile endpoint if required; display-name editing remains Supabase identity metadata. |
-| Explicit selected document IDs per question | Message body accepts only content and optional user role | Keep preview selection; reject selected-document sends in real mode. Backend must add a validated owned-document selection contract before enabling it. Automatic owner-scoped retrieval is distinct. |
-| Structured source cards when reloading history | GET messages contains plain content; RAG appends a serialized snapshot to assistant text | Preserve historical text; request a structured history-knowledge projection. Do not promote arbitrary message text into verified source cards. |
-| General real chat retry/streaming | Complete JSON; idempotency only under controls; failed keys do not regenerate | Use history reload and explicit acknowledgement recovery. Streaming/regeneration needs separate approved contracts. |
-| Usage plan/MIME policy metadata | Daily limits/stock only, no pricing/plan name or configured MIME subset | Display technical limits; optionally extend upload-policy projection after backend agreement. |
-| GET `/api/v1/exams` and `/api/v1/exams/:slug` | No registered routes | Keep clearly labelled exam demo records in both modes. Backend needs reviewed exam directory/detail models, source provenance, cycle dates, pagination/filtering, and verification semantics. |
-| Eligibility decision service | No engine or endpoint | Collect structured education/percentage/stream/year/category/exam-specific inputs; no frontend eligibility calculation. Agree an endpoint/request including exam/cycle and a result with status, reasons, missing fields, evaluated rules and authoritative source provenance before wiring it. |
-| Bookmark persistence | No bookmark endpoint | Current exam bookmarks remain browser-local preview state. |
+| Frontend/frozen expectation                    | Backend reality                                                                          | Required action                                                                                                                                                                                                                                                                                 |
+| ---------------------------------------------- | ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Frozen `/api/v1/me` application profile        | Only `/api/v1/auth/me` identity exists; no name/createdAt/profile projection             | Use verified identity now. Confirm/add an application-profile endpoint if required; display-name editing remains Supabase identity metadata.                                                                                                                                                    |
+| Explicit selected document IDs per question    | Message body accepts only content and optional user role                                 | Keep preview selection; reject selected-document sends in real mode. Backend must add a validated owned-document selection contract before enabling it. Automatic owner-scoped retrieval is distinct.                                                                                           |
+| Structured source cards when reloading history | GET messages contains plain content; RAG appends a serialized snapshot to assistant text | Preserve historical text; request a structured history-knowledge projection. Do not promote arbitrary message text into verified source cards.                                                                                                                                                  |
+| General real chat retry/streaming              | Complete JSON; idempotency only under controls; failed keys do not regenerate            | Use history reload and explicit acknowledgement recovery. Streaming/regeneration needs separate approved contracts.                                                                                                                                                                             |
+| Usage plan/MIME policy metadata                | Daily limits/stock only, no pricing/plan name or configured MIME subset                  | Display technical limits; optionally extend upload-policy projection after backend agreement.                                                                                                                                                                                                   |
+| GET `/api/v1/exams` and `/api/v1/exams/:slug`  | No registered routes                                                                     | Keep clearly labelled exam demo records in both modes. Backend needs reviewed exam directory/detail models, source provenance, cycle dates, pagination/filtering, and verification semantics.                                                                                                   |
+| Eligibility decision service                   | No engine or endpoint                                                                    | Collect structured education/percentage/stream/year/category/exam-specific inputs; no frontend eligibility calculation. Agree an endpoint/request including exam/cycle and a result with status, reasons, missing fields, evaluated rules and authoritative source provenance before wiring it. |
+| Bookmark persistence                           | No bookmark endpoint                                                                     | Current exam bookmarks remain browser-local preview state.                                                                                                                                                                                                                                      |
+| Chat response locale                           | Current message JSON rejects unknown fields                                              | The frontend `SendMessageInput` carries `locale: "en"                                                                                                                                                                                                                                           | "hi" | "te" | "ta"`for the future contract, but the real adapter intentionally omits it from the current wire body. Add an optional validated`locale`field to`POST /api/v1/conversations/:id/messages`; the backend should use it as the preferred response language while continuing to accept user messages written in any language. |
+
+## Multilingual frontend preference
+
+The frontend stores the selected UI locale in `localStorage` under
+`admitics:locale`, so no account/profile migration is required. The preference
+is shared across routes and restored after refresh for signed-out and signed-in
+users. The current backend has no user-preference endpoint, so authenticated
+preferences remain browser-local until such an endpoint is agreed.
 
 ## Authentication acceptance
 

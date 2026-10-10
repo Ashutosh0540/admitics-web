@@ -8,25 +8,28 @@ import { AccountMenu } from "@/components/auth/account-menu";
 import { ButtonLink } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 import { cn } from "@/lib/utils";
+import { LanguageSelector } from "./language-selector";
+import { useTranslation } from "@/lib/i18n";
 
 const links = [
-  ["Explore", "/admissions"],
-  ["Exams", "/exams"],
-  ["Colleges", "/colleges"],
-  ["Courses", "/courses"],
-  ["Scholarships", "/scholarships"],
-  ["Ask Admitics", "/chat"],
+  ["explore", "/admissions"],
+  ["exams", "/exams"],
+  ["colleges", "/colleges"],
+  ["courses", "/courses"],
+  ["scholarships", "/scholarships"],
+  ["askAdmitics", "/chat"],
 ];
 
 export function Header() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const t = useTranslation();
   return (
     <header className="relative z-20 border-b border-line bg-paper">
       <div className="container-page flex h-20 items-center justify-between gap-6">
         <Logo />
         <nav
-          aria-label="Main navigation"
+          aria-label={t("nav.main")}
           className="hidden items-center gap-5 xl:flex"
         >
           {links.map(([label, href]) => (
@@ -39,21 +42,22 @@ export function Header() {
                 pathname === href ? "text-brand" : "text-muted",
               )}
             >
-              {label}
+              {t(`nav.${label}` as Parameters<typeof t>[0])}
             </Link>
           ))}
         </nav>
         <div className="hidden items-center gap-3 xl:flex">
+          <LanguageSelector />
           <AccountMenu />
           <ButtonLink
             href="/signup"
             className="min-h-10 rounded-lg px-4 py-2 text-xs"
           >
-            Get started <ArrowUpRight size={15} />
+            {t("nav.getStarted")} <ArrowUpRight size={15} />
           </ButtonLink>
         </div>
         <button
-          aria-label="Open navigation"
+          aria-label={t("nav.openNavigation")}
           aria-expanded={open}
           onClick={() => setOpen(true)}
           className="flex size-11 items-center justify-center rounded-lg border border-line xl:hidden"
@@ -64,9 +68,9 @@ export function Header() {
       <Modal
         open={open}
         onClose={() => setOpen(false)}
-        title="Explore Admitics"
+        title={t("nav.exploreAdmitics")}
       >
-        <nav aria-label="Mobile navigation" className="grid gap-1">
+        <nav aria-label={t("nav.mobile")} className="grid gap-1">
           {links.map(([label, href]) => (
             <Link
               onClick={() => setOpen(false)}
@@ -74,7 +78,7 @@ export function Header() {
               href={href}
               className="rounded-lg px-3 py-3 text-sm hover:bg-mint"
             >
-              {label}
+              {t(`nav.${label}` as Parameters<typeof t>[0])}
             </Link>
           ))}
           <div className="my-3 border-t border-line" />
@@ -83,26 +87,32 @@ export function Header() {
             href="/dashboard"
             className="rounded-lg px-3 py-3 text-sm hover:bg-mint"
           >
-            Dashboard
+            {t("nav.dashboard")}
           </Link>
           <Link
             onClick={() => setOpen(false)}
             href="/documents"
             className="rounded-lg px-3 py-3 text-sm hover:bg-mint"
           >
-            Documents
+            {t("nav.documents")}
           </Link>
           <Link
             onClick={() => setOpen(false)}
             href="/settings"
             className="rounded-lg px-3 py-3 text-sm hover:bg-mint"
           >
-            Account settings
+            {t("nav.accountSettings")}
           </Link>
+          <div className="flex items-center justify-between gap-3 px-3 py-2">
+            <span className="text-xs text-muted">
+              {t("language.currentLanguage")}
+            </span>
+            <LanguageSelector />
+          </div>
           <div className="flex items-center gap-3 px-3 py-2">
             <AccountMenu />
             <ButtonLink href="/signup" onClick={() => setOpen(false)}>
-              Get started
+              {t("nav.getStarted")}
             </ButtonLink>
           </div>
         </nav>

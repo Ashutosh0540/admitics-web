@@ -1,23 +1,28 @@
 import type { Usage } from "@/types";
 import { Badge, Card } from "@/components/ui/primitives";
 import { formatBytes, formatDate } from "@/lib/utils";
+import { useTranslation } from "@/lib/i18n";
 
 export function UsageCard({ usage }: { usage: Usage }) {
+  const t = useTranslation();
   const rows = [
     {
-      label: usage.plan === "Preview" ? "Advisor responses" : "Questions sent",
+      label:
+        usage.plan === "Preview"
+          ? t("usage.advisorResponses")
+          : t("usage.questionsSent"),
       used: usage.messages.used,
       limit: usage.messages.limit,
       display: `${usage.messages.used} / ${usage.messages.limit}`,
     },
     {
-      label: "Documents",
+      label: t("usage.documents"),
       used: usage.documents.used,
       limit: usage.documents.limit,
       display: `${usage.documents.used} / ${usage.documents.limit}`,
     },
     {
-      label: "Storage",
+      label: t("usage.storage"),
       used: usage.storage.used,
       limit: usage.storage.limit,
       display: `${formatBytes(usage.storage.used)} / ${formatBytes(usage.storage.limit)}`,
@@ -26,7 +31,7 @@ export function UsageCard({ usage }: { usage: Usage }) {
   return (
     <Card>
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold">Your usage</h2>
+        <h2 className="text-sm font-semibold">{t("usage.title")}</h2>
         <Badge tone="neutral">{usage.plan}</Badge>
       </div>
       <div className="mt-6 space-y-5">
@@ -56,10 +61,10 @@ export function UsageCard({ usage }: { usage: Usage }) {
         ))}
       </div>
       <p className="mt-6 text-[10px] leading-5 text-muted">
-        Current period ends {formatDate(usage.periodEnd)}.{" "}
+        {t("usage.periodEnds", { date: formatDate(usage.periodEnd) })}{" "}
         {usage.plan === "Preview"
-          ? "Example limits; not a live plan or billing record."
-          : "Limits and usage are provided by Admitics."}
+          ? t("usage.previewLimits")
+          : t("usage.provided")}
       </p>
     </Card>
   );

@@ -8,6 +8,7 @@ import {
 } from "react";
 import { getAuth } from "@/lib/auth";
 import type { User } from "@/types";
+import { useTranslation } from "@/lib/i18n";
 
 const AuthContext = createContext<{
   user: User | null;
@@ -15,6 +16,7 @@ const AuthContext = createContext<{
   error: string | null;
 }>({ user: null, loading: true, error: null });
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const t = useTranslation();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -36,9 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .catch((reason) => {
         if (active)
           setError(
-            reason instanceof Error
-              ? reason.message
-              : "Couldn't restore your session.",
+            reason instanceof Error ? reason.message : t("common.unknownError"),
           );
       })
       .finally(() => {
@@ -48,7 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       active = false;
       unsubscribe();
     };
-  }, []);
+  }, [t]);
   return <AuthContext value={{ user, loading, error }}>{children}</AuthContext>;
 }
 export function useAuth() {

@@ -17,6 +17,7 @@ import {
   inputStyles,
 } from "@/components/ui/primitives";
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "@/lib/i18n";
 
 const icons = {
   exams: BookOpen,
@@ -32,14 +33,15 @@ export function ExploreList({
   entries: ContentEntry[];
 }) {
   const [query, setQuery] = useState("");
-  const [tag, setTag] = useState("All areas");
+  const [tag, setTag] = useState("__all__");
+  const t = useTranslation();
   const tags = [...new Set(entries.map((item) => item.tag))];
   const filtered = entries.filter(
     (item) =>
       `${item.title} ${item.subtitle} ${item.summary} ${item.tag}`
         .toLowerCase()
         .includes(query.toLowerCase()) &&
-      (tag === "All areas" || item.tag === tag),
+      (tag === "__all__" || item.tag === tag),
   );
   const Icon = icons[category];
   return (
@@ -47,20 +49,28 @@ export function ExploreList({
       <div className="mb-8 flex flex-col gap-3 rounded-2xl border border-line bg-white p-4 sm:flex-row">
         <div className="relative flex-1">
           <label htmlFor="content-search" className="sr-only">
-            Search {category}
+            {t("explore.search", { category })}
           </label>
           <Search size={17} className="absolute top-4 left-4 text-muted" />
           <Input
             id="content-search"
             type="search"
-            placeholder={`Find ${category === "colleges" ? "a college" : category === "courses" ? "a course" : category === "exams" ? "an exam" : "support"}…`}
+            placeholder={t(
+              category === "colleges"
+                ? "explore.findCollege"
+                : category === "courses"
+                  ? "explore.findCourse"
+                  : category === "exams"
+                    ? "explore.findExam"
+                    : "explore.findSupport",
+            )}
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             className="border-transparent bg-paper pl-11"
           />
         </div>
         <label className="sr-only" htmlFor="area-filter">
-          Filter by area
+          {t("explore.filterArea")}
         </label>
         <select
           id="area-filter"
@@ -68,28 +78,31 @@ export function ExploreList({
           onChange={(event) => setTag(event.target.value)}
           className={`${inputStyles} sm:w-56`}
         >
-          <option>All areas</option>
+          <option value="__all__">{t("explore.allAreas")}</option>
           {tags.map((value) => (
             <option key={value}>{value}</option>
           ))}
         </select>
       </div>
       <p role="status" className="mb-5 text-xs text-muted">
-        {filtered.length} starter overview{filtered.length !== 1 ? "s" : ""}
+        {filtered.length}{" "}
+        {filtered.length !== 1
+          ? t("explore.starterOverviews")
+          : t("explore.starterOverview")}
       </p>
       {filtered.length === 0 ? (
         <EmptyState
-          title="No matches just yet"
-          description="Try a different search or area. This collection will grow as reviewed content is added."
+          title={t("explore.noMatches")}
+          description={t("explore.noMatchesCopy")}
           action={
             <Button
               variant="secondary"
               onClick={() => {
                 setQuery("");
-                setTag("All areas");
+                setTag("__all__");
               }}
             >
-              Clear filters
+              {t("explore.clearFilters")}
             </Button>
           }
         />
@@ -128,7 +141,7 @@ export function ExploreList({
                 href={`/${category}/${entry.slug}`}
                 className="mt-6 flex items-center justify-between rounded-lg bg-paper px-3 py-3 text-xs font-semibold text-brand"
               >
-                Explore {entry.title}
+                {t("explore.exploreEntry", { title: entry.title })}
                 <ArrowUpRight size={15} />
               </Link>
             </article>

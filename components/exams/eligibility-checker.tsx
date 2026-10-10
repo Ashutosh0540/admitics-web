@@ -1,7 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { AlertCircle, CheckCircle2, CircleHelp, Info, XCircle } from "lucide-react";
+import {
+  AlertCircle,
+  CheckCircle2,
+  CircleHelp,
+  Info,
+  XCircle,
+} from "lucide-react";
 import type {
   EligibilityField,
   EligibilityProfile,
@@ -11,6 +17,7 @@ import type {
 import { Button, ButtonLink } from "@/components/ui/button";
 import { inputStyles } from "@/components/ui/primitives";
 import { buildExamAskHref } from "./exam-utils";
+import { useI18n, useTranslation } from "@/lib/i18n";
 
 const initialProfile: EligibilityProfile = {
   educationLevel: "",
@@ -21,31 +28,47 @@ const initialProfile: EligibilityProfile = {
   examSpecific: {},
 };
 
-function ResultPanel({ exam, result }: { exam: Exam; result: EligibilityResult }) {
+function ResultPanel({
+  exam,
+  result,
+}: {
+  exam: Exam;
+  result: EligibilityResult;
+}) {
+  const t = useTranslation();
+  const { locale } = useI18n();
   const content = {
     eligible: {
-      title: "Preliminary result: eligible",
-      copy: "The preliminary service returned an eligible result for your submitted profile.",
+      title: t("eligibility.eligible"),
+      copy: t("eligibility.eligibleCopy"),
       Icon: CheckCircle2,
       className: "border-brand/20 bg-mint text-brand",
     },
     "not-eligible": {
-      title: "Preliminary result: not eligible",
-      copy: "The preliminary service returned a not eligible result. Review the reasons below.",
+      title: t("eligibility.notEligible"),
+      copy: t("eligibility.notEligibleCopy"),
       Icon: XCircle,
       className: "border-red-200 bg-red-50 text-danger",
     },
     "insufficient-information": {
-      title: "More information needed",
-      copy: "The preliminary service needs more information to check your profile.",
+      title: t("eligibility.moreInfo"),
+      copy: t("eligibility.moreInfoCopy"),
       Icon: CircleHelp,
       className: "border-amber-200 bg-amber-50 text-amber",
     },
   }[result.status];
   return (
-    <div className={`mt-6 rounded-2xl border p-5 ${content.className}`} role="status" aria-live="polite">
+    <div
+      className={`mt-6 rounded-2xl border p-5 ${content.className}`}
+      role="status"
+      aria-live="polite"
+    >
       <div className="flex items-start gap-3">
-        <content.Icon size={22} className="mt-0.5 shrink-0" aria-hidden="true" />
+        <content.Icon
+          size={22}
+          className="mt-0.5 shrink-0"
+          aria-hidden="true"
+        />
         <div>
           <h3 className="font-semibold">{content.title}</h3>
           <p className="mt-2 text-sm leading-6 opacity-90">{content.copy}</p>
@@ -53,7 +76,10 @@ function ResultPanel({ exam, result }: { exam: Exam; result: EligibilityResult }
             <ul className="mt-4 space-y-2 text-xs leading-5 opacity-90">
               {result.reasons.map((reason) => (
                 <li key={reason} className="flex items-start gap-2">
-                  <span className="mt-1.5 size-1 shrink-0 rounded-full bg-current" aria-hidden="true" />
+                  <span
+                    className="mt-1.5 size-1 shrink-0 rounded-full bg-current"
+                    aria-hidden="true"
+                  />
                   {reason}
                 </li>
               ))}
@@ -63,11 +89,11 @@ function ResultPanel({ exam, result }: { exam: Exam; result: EligibilityResult }
             {result.disclaimer}
           </p>
           <ButtonLink
-            href={buildExamAskHref(exam, "eligibility-check")}
+            href={buildExamAskHref(exam, "eligibility-check", locale)}
             variant="ghost"
             className="mt-4 min-h-9 px-0 py-1 text-current hover:bg-transparent hover:underline"
           >
-            Ask Admitics about this result
+            {t("eligibility.askResult")}
           </ButtonLink>
         </div>
       </div>
@@ -82,15 +108,22 @@ export function EligibilityChecker({
   exam: Exam;
   onCheck?: (profile: EligibilityProfile) => Promise<EligibilityResult>;
 }) {
+  const t = useTranslation();
   const [profile, setProfile] = useState<EligibilityProfile>(initialProfile);
   const [result, setResult] = useState<EligibilityResult | null>(null);
   const [serviceMessage, setServiceMessage] = useState("");
   const [checking, setChecking] = useState(false);
-  const setValue = <K extends keyof EligibilityProfile>(key: K, value: EligibilityProfile[K]) => {
+  const setValue = <K extends keyof EligibilityProfile>(
+    key: K,
+    value: EligibilityProfile[K],
+  ) => {
     setProfile((current) => ({ ...current, [key]: value }));
     setResult(null);
   };
-  const setSpecificValue = (field: EligibilityField, value: string | boolean) => {
+  const setSpecificValue = (
+    field: EligibilityField,
+    value: string | boolean,
+  ) => {
     setProfile((current) => ({
       ...current,
       examSpecific: { ...current.examSpecific, [field.id]: value },
@@ -102,9 +135,7 @@ export function EligibilityChecker({
     setResult(null);
     setServiceMessage("");
     if (!onCheck) {
-      setServiceMessage(
-        "Your profile is ready to check when the exam's official eligibility service is connected. No eligibility decision was made.",
-      );
+      setServiceMessage(t("eligibility.unavailableCopy"));
       return;
     }
     setChecking(true);
@@ -112,9 +143,7 @@ export function EligibilityChecker({
       setResult(await onCheck(profile));
     } catch (reason) {
       setServiceMessage(
-        reason instanceof Error
-          ? reason.message
-          : "The eligibility check could not be completed. Please try again.",
+        reason instanceof Error ? reason.message : t("eligibility.failed"),
       );
     } finally {
       setChecking(false);
@@ -128,25 +157,27 @@ export function EligibilityChecker({
           <CircleHelp size={22} aria-hidden="true" />
         </span>
         <div>
-          <h3 className="text-lg font-semibold">Check my eligibility</h3>
+          <h3 className="text-lg font-semibold">{t("eligibility.check")}</h3>
           <p className="mt-2 max-w-xl text-sm leading-6 text-muted">
-            Share a few basics for a quick preliminary check. You can leave the
-            category blank when it does not apply to your situation.
+            {t("eligibility.formCopy")}
           </p>
         </div>
       </div>
       <div className="mt-5 flex items-start gap-2 rounded-xl bg-[#f8f4eb] p-3 text-xs leading-5 text-muted">
-          <Info size={15} className="mt-0.5 shrink-0 text-amber" aria-hidden="true" />
-        <p>
-          This form collects structured information for a future eligibility
-          service. It does not calculate eligibility in the browser; the
-          official notification remains authoritative.
-        </p>
+        <Info
+          size={15}
+          className="mt-0.5 shrink-0 text-amber"
+          aria-hidden="true"
+        />
+        <p>{t("eligibility.formNotice")}</p>
       </div>
       <form className="mt-7 grid gap-5 sm:grid-cols-2" onSubmit={submit}>
         <div>
-          <label htmlFor="education-level" className="mb-2 block text-xs font-semibold">
-            Class / education level
+          <label
+            htmlFor="education-level"
+            className="mb-2 block text-xs font-semibold"
+          >
+            {t("eligibility.educationLevel")}
           </label>
           <select
             id="education-level"
@@ -155,17 +186,26 @@ export function EligibilityChecker({
             className={inputStyles}
             aria-describedby="education-level-help"
           >
-            <option value="">Select your level</option>
-            <option value="class-10">Class 10 / equivalent</option>
-            <option value="class-12">Class 12 / equivalent</option>
-            <option value="undergraduate">Undergraduate degree</option>
-            <option value="postgraduate">Postgraduate degree</option>
+            <option value="">{t("eligibility.selectLevel")}</option>
+            <option value="class-10">{t("eligibility.class10")}</option>
+            <option value="class-12">{t("eligibility.class12")}</option>
+            <option value="undergraduate">
+              {t("eligibility.undergraduate")}
+            </option>
+            <option value="postgraduate">
+              {t("eligibility.postgraduate")}
+            </option>
           </select>
-          <p id="education-level-help" className="mt-2 text-[11px] text-muted">Choose your completed or expected level.</p>
+          <p id="education-level-help" className="mt-2 text-[11px] text-muted">
+            {t("eligibility.levelHelp")}
+          </p>
         </div>
         <div>
-          <label htmlFor="percentage" className="mb-2 block text-xs font-semibold">
-            Percentage
+          <label
+            htmlFor="percentage"
+            className="mb-2 block text-xs font-semibold"
+          >
+            {t("eligibility.percentage")}
           </label>
           <input
             id="percentage"
@@ -174,17 +214,24 @@ export function EligibilityChecker({
             min="0"
             max="100"
             step="0.01"
-            placeholder="e.g. 78"
+            placeholder={t("eligibility.percentagePlaceholder")}
             value={profile.percentage ?? ""}
-            onChange={(event) => setValue("percentage", event.target.value === "" ? null : Number(event.target.value))}
+            onChange={(event) =>
+              setValue(
+                "percentage",
+                event.target.value === "" ? null : Number(event.target.value),
+              )
+            }
             className={inputStyles}
             aria-describedby="percentage-help"
           />
-          <p id="percentage-help" className="mt-2 text-[11px] text-muted">Use your relevant qualifying-exam percentage.</p>
+          <p id="percentage-help" className="mt-2 text-[11px] text-muted">
+            {t("eligibility.percentageHelp")}
+          </p>
         </div>
         <div>
           <label htmlFor="stream" className="mb-2 block text-xs font-semibold">
-            Stream
+            {t("eligibility.stream")}
           </label>
           <select
             id="stream"
@@ -192,17 +239,20 @@ export function EligibilityChecker({
             onChange={(event) => setValue("stream", event.target.value)}
             className={inputStyles}
           >
-            <option value="">Select your stream</option>
-            <option value="science">Science</option>
-            <option value="engineering">Engineering / technology</option>
-            <option value="commerce">Commerce</option>
-            <option value="arts-humanities">Arts / humanities</option>
-            <option value="vocational">Vocational / other</option>
+            <option value="">{t("eligibility.selectStream")}</option>
+            <option value="science">{t("eligibility.science")}</option>
+            <option value="engineering">{t("eligibility.engineering")}</option>
+            <option value="commerce">{t("eligibility.commerce")}</option>
+            <option value="arts-humanities">{t("eligibility.arts")}</option>
+            <option value="vocational">{t("eligibility.vocational")}</option>
           </select>
         </div>
         <div>
-          <label htmlFor="passing-year" className="mb-2 block text-xs font-semibold">
-            Passing year
+          <label
+            htmlFor="passing-year"
+            className="mb-2 block text-xs font-semibold"
+          >
+            {t("eligibility.passingYear")}
           </label>
           <input
             id="passing-year"
@@ -210,15 +260,26 @@ export function EligibilityChecker({
             inputMode="numeric"
             min="1900"
             max="2100"
-            placeholder="e.g. 2026"
+            placeholder={t("eligibility.yearPlaceholder")}
             value={profile.passingYear ?? ""}
-            onChange={(event) => setValue("passingYear", event.target.value === "" ? null : Number(event.target.value))}
+            onChange={(event) =>
+              setValue(
+                "passingYear",
+                event.target.value === "" ? null : Number(event.target.value),
+              )
+            }
             className={inputStyles}
           />
         </div>
         <div className="sm:col-span-2">
-          <label htmlFor="category" className="mb-2 block text-xs font-semibold">
-            Category <span className="font-normal text-muted">(where relevant)</span>
+          <label
+            htmlFor="category"
+            className="mb-2 block text-xs font-semibold"
+          >
+            {t("eligibility.category")}{" "}
+            <span className="font-normal text-muted">
+              ({t("eligibility.whereRelevant")})
+            </span>
           </label>
           <select
             id="category"
@@ -226,9 +287,9 @@ export function EligibilityChecker({
             onChange={(event) => setValue("category", event.target.value)}
             className={inputStyles}
           >
-            <option value="">Prefer not to say / not applicable</option>
-            <option value="open">Open · demo option</option>
-            <option value="reserved">Reserved · demo option</option>
+            <option value="">{t("eligibility.preferNot")}</option>
+            <option value="open">{t("eligibility.openDemo")}</option>
+            <option value="reserved">{t("eligibility.reservedDemo")}</option>
           </select>
         </div>
         {exam.eligibilityFields.map((field) => (
@@ -238,51 +299,81 @@ export function EligibilityChecker({
                 <input
                   type="checkbox"
                   checked={profile.examSpecific[field.id] === true}
-                  onChange={(event) => setSpecificValue(field, event.target.checked)}
+                  onChange={(event) =>
+                    setSpecificValue(field, event.target.checked)
+                  }
                   className="mt-1 size-4 accent-brand"
                 />
                 <span>
-                  <span className="block text-sm font-medium">{field.label}</span>
-                  {field.helpText && <span className="mt-1 block text-[11px] leading-5 text-muted">{field.helpText}</span>}
+                  <span className="block text-sm font-medium">
+                    {field.label}
+                  </span>
+                  {field.helpText && (
+                    <span className="mt-1 block text-[11px] leading-5 text-muted">
+                      {field.helpText}
+                    </span>
+                  )}
                 </span>
               </label>
             ) : (
               <>
-                <label htmlFor={`exam-field-${field.id}`} className="mb-2 block text-xs font-semibold">
+                <label
+                  htmlFor={`exam-field-${field.id}`}
+                  className="mb-2 block text-xs font-semibold"
+                >
                   {field.label}
                 </label>
                 <select
                   id={`exam-field-${field.id}`}
                   value={String(profile.examSpecific[field.id] ?? "")}
-                  onChange={(event) => setSpecificValue(field, event.target.value)}
+                  onChange={(event) =>
+                    setSpecificValue(field, event.target.value)
+                  }
                   className={inputStyles}
                 >
-                  <option value="">Select an option</option>
-                  {field.options?.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+                  <option value="">{t("eligibility.selectOption")}</option>
+                  {field.options?.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
                 </select>
-                {field.helpText && <p className="mt-2 text-[11px] text-muted">{field.helpText}</p>}
+                {field.helpText && (
+                  <p className="mt-2 text-[11px] text-muted">
+                    {field.helpText}
+                  </p>
+                )}
               </>
             )}
           </div>
         ))}
         <div className="flex flex-col items-start gap-3 border-t border-line pt-5 sm:col-span-2 sm:flex-row sm:items-center">
-          <Button type="submit" loading={checking}>Check my eligibility</Button>
+          <Button type="submit" loading={checking}>
+            {t("eligibility.check")}
+          </Button>
           <span className="flex items-center gap-2 text-[11px] text-muted">
             <AlertCircle size={14} aria-hidden="true" />
-            Preliminary check only
+            {t("eligibility.preliminaryOnly")}
           </span>
         </div>
       </form>
       {serviceMessage && (
-        <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-amber" role="status" aria-live="polite">
+        <div
+          className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-5 text-amber"
+          role="status"
+          aria-live="polite"
+        >
           <div className="flex items-start gap-3">
-            <CircleHelp size={21} className="mt-0.5 shrink-0" aria-hidden="true" />
+            <CircleHelp
+              size={21}
+              className="mt-0.5 shrink-0"
+              aria-hidden="true"
+            />
             <div>
-              <h3 className="font-semibold">Eligibility check unavailable</h3>
+              <h3 className="font-semibold">{t("eligibility.unavailable")}</h3>
               <p className="mt-2 text-sm leading-6">{serviceMessage}</p>
               <p className="mt-4 border-t border-amber-900/10 pt-4 text-[11px] leading-5">
-                This is a preliminary experience only. The current official
-                notification remains authoritative.
+                {t("eligibility.officialAuthoritative")}
               </p>
             </div>
           </div>

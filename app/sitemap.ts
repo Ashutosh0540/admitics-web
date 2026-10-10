@@ -2,6 +2,9 @@ import type { MetadataRoute } from "next";
 import { config } from "@/lib/config";
 import { examples } from "@/lib/content/examples";
 import { demoExams } from "@/lib/exams/mock-data";
+
+export const dynamic = "force-static";
+
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
     "",

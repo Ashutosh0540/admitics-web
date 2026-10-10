@@ -1,6 +1,7 @@
 import { ArrowUpRight, FileText, Link2 } from "lucide-react";
 import type { Citation, Source } from "@/types";
 import { safeExternalUrl } from "@/lib/utils";
+import { useTranslation } from "@/lib/i18n";
 
 export function SourceCards({
   sources,
@@ -11,17 +12,16 @@ export function SourceCards({
   citations: Citation[];
   preview?: boolean;
 }) {
+  const t = useTranslation();
   if (!sources.length) return null;
   return (
     <section
-      aria-label={preview ? "Example reference links" : "Sources"}
+      aria-label={preview ? t("sources.exampleLinks") : t("sources.sources")}
       className="mt-5 border-t border-line pt-4"
     >
       <h3 className="mb-3 flex items-center gap-2 text-[11px] font-semibold text-muted">
         <Link2 size={13} />
-        {preview
-          ? "REFERENCE LINKS · PREVIEW, NOT RETRIEVED EVIDENCE"
-          : "SOURCES & CITATIONS"}
+        {preview ? t("sources.previewHeading") : t("sources.heading")}
       </h3>
       <div className="grid gap-2 sm:grid-cols-2">
         {sources.map((source) => {
@@ -67,7 +67,7 @@ export function SourceCards({
               className="flex items-start gap-2 rounded-xl border border-line bg-paper p-3 transition-colors hover:border-brand/30"
             >
               {content}
-              <span className="sr-only"> (opens in a new tab)</span>
+              <span className="sr-only">{t("common.opensInNewTab")}</span>
             </a>
           ) : (
             <div

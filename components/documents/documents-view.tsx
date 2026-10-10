@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/primitives";
 import { Modal } from "@/components/ui/modal";
 import { UsageCard } from "@/components/dashboard/usage-card";
+import { useTranslation } from "@/lib/i18n";
 
 async function loadDocuments(signal: AbortSignal) {
   const [documents, usage] = await Promise.all([
@@ -59,6 +60,7 @@ function DocumentsInner() {
   const [dragging, setDragging] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
   const uploadController = useRef<AbortController | null>(null);
+  const t = useTranslation();
   useEffect(() => {
     return () => uploadController.current?.abort();
   }, []);
@@ -89,13 +91,15 @@ function DocumentsInner() {
       (file.type && !limits.allowedMimeTypes.includes(file.type))
     ) {
       setUploadError(
-        `Choose one of these file types: ${limits.allowedExtensions.join(", ")}.`,
+        t("documents.chooseTypes", {
+          types: limits.allowedExtensions.join(", "),
+        }),
       );
       return;
     }
     if (file.size === 0 || file.size > limits.maxFileBytes) {
       setUploadError(
-        `Choose a non-empty file up to ${formatBytes(limits.maxFileBytes)}.`,
+        t("documents.chooseSize", { size: formatBytes(limits.maxFileBytes) }),
       );
       return;
     }
@@ -103,9 +107,7 @@ function DocumentsInner() {
       data.usage.documents.used >= data.usage.documents.limit ||
       data.usage.storage.used + file.size > data.usage.storage.limit
     ) {
-      setUploadError(
-        "Your document or storage limit has been reached. Delete a file to make room.",
-      );
+      setUploadError(t("documents.limit"));
       return;
     }
     const controller = new AbortController();
@@ -120,22 +122,17 @@ function DocumentsInner() {
         if (isAbort(reason)) throw reason;
         setNotice(
           isPreview
-            ? "File metadata added to preview. Processing is simulated; file contents were not uploaded or read."
-            : "Your upload was received. Processing is not available yet; refresh to check its status.",
+            ? t("documents.previewAdded")
+            : t("documents.receivedProcessing"),
         );
         return;
       }
       setNotice(
-        isPreview
-          ? "File metadata added to preview. Processing is simulated; file contents were not uploaded or read."
-          : "Upload received. Admitics is processing your document in the background.",
+        isPreview ? t("documents.previewAdded") : t("documents.uploadReceived"),
       );
     } catch (reason) {
       if (!isAbort(reason)) setUploadError(errorMessage(reason));
-      else
-        setNotice(
-          "Upload cancelled. Refreshing your document list to check its status.",
-        );
+      else setNotice(t("documents.uploadCancelled"));
     } finally {
       setUploading(false);
       uploadController.current = null;
@@ -150,7 +147,7 @@ function DocumentsInner() {
     setNotice("");
     try {
       await documentsApi.retry(document.id);
-      setNotice("Processing has been queued again. We’ll update the status shortly.");
+      setNotice(t("documents.processingCopy"));
       refresh(true);
     } catch (reason) {
       setUploadError(errorMessage(reason));
@@ -161,18 +158,16 @@ function DocumentsInner() {
   return (
     <div className="container-page py-10 sm:py-14">
       <div className="mb-9">
-        <p className="eyebrow mb-3">A LITTLE MORE CONTEXT</p>
+        <p className="eyebrow mb-3">{t("documents.eyebrow")}</p>
         <h1 className="editorial text-4xl sm:text-5xl">
-          Your documents, in the picture.
+          {t("documents.title")}
         </h1>
         <p className="mt-4 max-w-2xl text-sm leading-7 text-muted">
-          {isPreview
-            ? "Bring an admissions notice or supporting document into your conversation. Upload here, then choose ready documents in Ask Admitics."
-            : "Upload and manage admissions notices or supporting documents here. Selecting an individual file for a chat question is not available yet."}
+          {isPreview ? t("documents.previewIntro") : t("documents.realIntro")}
         </p>
       </div>
       {loading ? (
-        <LoadingState label="Opening your document library…" />
+        <LoadingState label={t("documents.opening")} />
       ) : error ? (
         <ErrorState message={error} retry={refresh} />
       ) : (
@@ -190,7 +185,7 @@ function DocumentsInner() {
                   setDragging(false);
                   const file = event.dataTransfer.files[0];
                   if (event.dataTransfer.files.length > 1)
-                    setUploadError("Please upload one file at a time.");
+                    setUploadError(t("documents.multipleFiles"));
                   else if (file) void upload(file);
                 }}
                 className={`rounded-2xl border-2 border-dashed p-7 text-center transition-colors sm:p-10 ${dragging ? "border-brand bg-mint" : "border-brand/20 bg-white"}`}
@@ -198,13 +193,11 @@ function DocumentsInner() {
                 <UploadCloud size={32} className="mx-auto mb-4 text-brand" />
                 <h2 className="text-base font-semibold">
                   {uploading
-                    ? "Adding your document…"
-                    : "Make your question more personal."}
+                    ? t("documents.adding")
+                    : t("documents.makePersonal")}
                 </h2>
                 <p className="mt-3 text-xs leading-6 text-muted">
-                  {uploading
-                    ? uploadName
-                    : "Drag a file here or choose one from your device."}
+                  {uploading ? uploadName : t("documents.dragOrChoose")}
                 </p>
                 <input
                   ref={fileInput}
@@ -217,7 +210,7 @@ function DocumentsInner() {
                   }}
                   disabled={uploading}
                   className="sr-only"
-                  aria-label="Choose a document to upload"
+                  aria-label={t("documents.chooseUpload")}
                   tabIndex={-1}
                 />
                 {uploading ? (
@@ -227,14 +220,14 @@ function DocumentsInner() {
                       className="flex items-center gap-2 text-xs text-muted"
                     >
                       <LoaderCircle size={16} className="animate-spin" />
-                      Uploading
+                      {t("documents.uploading")}
                     </span>
                     <Button
                       variant="ghost"
                       onClick={() => uploadController.current?.abort()}
                     >
                       <X size={15} />
-                      Cancel
+                      {t("documents.cancel")}
                     </Button>
                   </div>
                 ) : (
@@ -242,7 +235,7 @@ function DocumentsInner() {
                     onClick={() => fileInput.current?.click()}
                     className="mt-5"
                   >
-                    Choose a file <UploadCloud size={15} />
+                    {t("documents.chooseFile")} <UploadCloud size={15} />
                   </Button>
                 )}
                 <p className="mt-4 text-[10px] leading-5 text-muted">
@@ -250,7 +243,7 @@ function DocumentsInner() {
                     .map((ext) => ext.replace(".", "").toUpperCase())
                     .join(" · ")}{" "}
                   · Up to {formatBytes(data.usage.uploadLimits.maxFileBytes)}{" "}
-                  per file · One file at a time
+                  per file · {t("documents.oneAtTime")}
                 </p>
               </div>
               {uploadError && <ErrorState message={uploadError} />}
@@ -265,19 +258,23 @@ function DocumentsInner() {
               )}
               <Card>
                 <div className="mb-5 flex items-center justify-between">
-                  <h2 className="text-sm font-semibold">Document library</h2>
+                  <h2 className="text-sm font-semibold">
+                    {t("documents.library")}
+                  </h2>
                   <span className="text-xs text-muted">
-                    {data.documents.length} file
-                    {data.documents.length !== 1 ? "s" : ""}
+                    {data.documents.length}{" "}
+                    {data.documents.length !== 1
+                      ? t("documents.files")
+                      : t("documents.file")}
                   </span>
                 </div>
                 {data.documents.length === 0 ? (
                   <EmptyState
-                    title="Your library has room to grow"
+                    title={t("documents.libraryEmpty")}
                     description={
                       isPreview
-                        ? "Upload your first document above. Only ready documents can be added to a conversation."
-                        : "Upload your first document above. Your library will show its processing status."
+                        ? t("documents.previewEmpty")
+                        : t("documents.realEmpty")
                     }
                   />
                 ) : (
@@ -294,9 +291,11 @@ function DocumentsInner() {
                             </h3>
                             <p className="mt-1 text-[10px] leading-5 text-muted">
                               {formatBytes(doc.size)} ·{" "}
-                              {doc.name.split(".").pop()?.toUpperCase()} · Added{" "}
-                              {formatDate(doc.createdAt)}
-                              {doc.pageCount ? ` · ${doc.pageCount} pages` : ""}
+                              {doc.name.split(".").pop()?.toUpperCase()} ·{" "}
+                              {t("documents.added")} {formatDate(doc.createdAt)}
+                              {doc.pageCount
+                                ? ` · ${doc.pageCount} ${t("documents.pages")}`
+                                : ""}
                             </p>
                             <Badge
                               className="mt-2"
@@ -311,13 +310,16 @@ function DocumentsInner() {
                               {(doc.status === "uploading" ||
                                 (isPreview && doc.status === "uploaded") ||
                                 doc.status === "processing" ||
-                                (doc.status === "deleting" && !doc.failureCode)) && (
+                                (doc.status === "deleting" &&
+                                  !doc.failureCode)) && (
                                 <LoaderCircle
                                   size={11}
                                   className="animate-spin"
                                 />
                               )}
-                              {doc.status === "ready" && <CheckCircle2 size={11} />}
+                              {doc.status === "ready" && (
+                                <CheckCircle2 size={11} />
+                              )}
                               {doc.statusDescription ??
                                 doc.status.charAt(0).toUpperCase() +
                                   doc.status.slice(1)}
@@ -328,7 +330,9 @@ function DocumentsInner() {
                               setDeleting(doc);
                               setDeleteError("");
                             }}
-                            aria-label={`Delete ${doc.name}`}
+                            aria-label={t("documents.deleteDocument", {
+                              name: doc.name,
+                            })}
                             className="flex size-11 shrink-0 items-center justify-center rounded-lg text-muted hover:bg-red-50 hover:text-danger"
                           >
                             <Trash2 size={16} />
@@ -336,10 +340,12 @@ function DocumentsInner() {
                         </div>
                         {doc.status === "failed" && (
                           <div className="mt-3 rounded-lg bg-red-50 p-3 text-xs leading-6 text-danger">
-                            {doc.failureMessage ?? doc.error ?? "This document couldn't be processed."}{" "}
+                            {doc.failureMessage ??
+                              doc.error ??
+                              t("documents.failedDefault")}{" "}
                             {doc.canRetry
-                              ? "You can try processing it again."
-                              : "Delete it and upload a supported file to try again."}
+                              ? t("documents.retryHint")
+                              : t("documents.deleteHint")}
                             {doc.canRetry && (
                               <Button
                                 variant="ghost"
@@ -348,29 +354,32 @@ function DocumentsInner() {
                                 onClick={() => void retryDocument(doc)}
                                 className="mt-2 min-h-8 px-0 py-1 text-danger hover:bg-transparent hover:underline"
                               >
-                                Retry processing
+                                {t("documents.retryProcessing")}
                               </Button>
                             )}
                           </div>
                         )}
                         {doc.status === "deleting" && doc.failureCode && (
-                          <p className="mt-3 rounded-lg bg-amber-50 p-3 text-xs leading-6 text-amber" role="status">
-                            Deletion could not finish. Use the delete action again to retry cleanup. This file is not available for questions.
+                          <p
+                            className="mt-3 rounded-lg bg-amber-50 p-3 text-xs leading-6 text-amber"
+                            role="status"
+                          >
+                            {t("documents.deletionFailed")}
                           </p>
                         )}
                         {doc.status === "ready" && !isPreview && (
                           <p className="mt-3 text-xs leading-6 text-muted">
-                            This file is processed. Selecting a specific file for a chat question is not available yet.
+                            {t("documents.processedUnavailable")}
                           </p>
                         )}
-                         {doc.status === "ready" && isPreview && (
+                        {doc.status === "ready" && isPreview && (
                           <ButtonLink
                             href={`/chat?document=${encodeURIComponent(doc.id)}`}
                             variant="ghost"
                             className="mt-2 min-h-9 px-0 py-1 text-xs"
                           >
                             <Sparkles size={13} />
-                            Ask about this document
+                            {t("documents.askAbout")}
                           </ButtonLink>
                         )}
                       </li>
@@ -383,26 +392,26 @@ function DocumentsInner() {
               <UsageCard usage={data.usage} />
               <Card>
                 <h2 className="text-sm font-semibold">
-                  What happens after upload?
+                  {t("documents.afterUpload")}
                 </h2>
                 <ol className="mt-5 space-y-5">
                   {[
                     [
                       "01",
-                      "Received",
-                       "Your file is received by Admitics.",
+                      t("documents.received"),
+                      t("documents.receivedCopy"),
                     ],
                     [
                       "02",
-                      "Processing",
-                       "Admitics prepares the document for questions.",
+                      t("documents.processing"),
+                      t("documents.processingCopy"),
                     ],
                     [
                       "03",
-                      "Ready",
+                      t("documents.ready"),
                       isPreview
-                        ? "You can add it as context to a conversation."
-                        : "Your file has been processed. Individual-file selection for questions is not available yet.",
+                        ? t("documents.readyPreviewCopy")
+                        : t("documents.readyRealCopy"),
                     ],
                   ].map(([number, title, copy]) => (
                     <li key={number} className="flex items-start gap-3">
@@ -420,9 +429,7 @@ function DocumentsInner() {
                 </ol>
                 {isPreview && (
                   <p className="mt-5 border-t border-line pt-4 text-[11px] leading-6 text-amber">
-                    Preview mode stores metadata in your browser. These states
-                    are simulated. No document contents are read, stored, or
-                    analyzed.
+                    {t("documents.previewStates")}
                   </p>
                 )}
               </Card>
@@ -435,11 +442,10 @@ function DocumentsInner() {
         onClose={() => {
           if (!deleteBusy) setDeleting(null);
         }}
-        title="Remove this document?"
+        title={t("documents.removeDocument")}
       >
         <p className="text-sm leading-7 text-muted">
-          “{deleting?.name}” will be removed and won’t be available as context
-          for future questions. This can’t be undone.
+          {t("documents.removeDocumentCopy", { name: deleting?.name ?? "" })}
         </p>
         {deleteError && (
           <div className="mt-4">
@@ -452,7 +458,7 @@ function DocumentsInner() {
             disabled={deleteBusy}
             onClick={() => setDeleting(null)}
           >
-            Keep document
+            {t("documents.keepDocument")}
           </Button>
           <Button
             variant="danger"
@@ -465,7 +471,7 @@ function DocumentsInner() {
                 await documentsApi.remove(deleting.id);
                 setDeleting(null);
                 refresh(true);
-                setNotice("Document removed.");
+                setNotice(t("documents.removed"));
               } catch (reason) {
                 setDeleteError(errorMessage(reason));
               } finally {
@@ -473,7 +479,7 @@ function DocumentsInner() {
               }
             }}
           >
-            Delete
+            {t("common.delete")}
           </Button>
         </div>
       </Modal>

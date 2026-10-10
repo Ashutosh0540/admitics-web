@@ -11,7 +11,7 @@ export const metadata = pageMetadata(
 );
 export default function ChatPage() {
   return (
-    <Suspense fallback={<LoadingState label="Opening your advisor…" />}>
+    <Suspense fallback={<LoadingState />}>
       <ChatWorkspace />
     </Suspense>
   );

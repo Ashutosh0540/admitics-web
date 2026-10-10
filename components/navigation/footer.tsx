@@ -1,34 +1,37 @@
+"use client";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { Logo } from "./logo";
+import { useTranslation } from "@/lib/i18n";
 
 export function Footer() {
+  const t = useTranslation();
   return (
     <footer className="border-t border-line bg-white">
       <div className="container-page grid gap-10 py-14 md:grid-cols-[1.6fr_1fr_1fr]">
         <div>
           <Logo />
           <p className="mt-5 max-w-xs text-sm leading-7 text-muted">
-            A little clarity for a big decision.
+            {t("footer.tagline")}
             <br />
-            Your education journey starts here.
+            {t("footer.journey")}
           </p>
           <Link
             href="/chat"
             className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-brand"
           >
-            Ask Admitics <ArrowUpRight size={15} />
+            {t("nav.askAdmitics")} <ArrowUpRight size={15} />
           </Link>
         </div>
         <div>
-          <h2 className="eyebrow mb-4">Find your direction</h2>
+          <h2 className="eyebrow mb-4">{t("footer.findDirection")}</h2>
           <ul className="grid gap-3 text-sm text-muted">
             {[
-              ["Admissions", "/admissions"],
-              ["Exams", "/exams"],
-              ["Colleges", "/colleges"],
-              ["Courses", "/courses"],
-              ["Scholarships", "/scholarships"],
+              [t("nav.explore"), "/admissions"],
+              [t("nav.exams"), "/exams"],
+              [t("nav.colleges"), "/colleges"],
+              [t("nav.courses"), "/courses"],
+              [t("nav.scholarships"), "/scholarships"],
             ].map(([label, href]) => (
               <li key={href}>
                 <Link className="hover:text-brand" href={href}>
@@ -39,14 +42,14 @@ export function Footer() {
           </ul>
         </div>
         <div>
-          <h2 className="eyebrow mb-4">Good to know</h2>
+          <h2 className="eyebrow mb-4">{t("footer.goodToKnow")}</h2>
           <ul className="grid gap-3 text-sm text-muted">
             {[
-              ["About", "/about"],
-              ["Contact", "/contact"],
-              ["Privacy", "/privacy"],
-              ["Terms", "/terms"],
-              ["Disclaimer", "/disclaimer"],
+              [t("footer.about"), "/about"],
+              [t("footer.contact"), "/contact"],
+              [t("footer.privacy"), "/privacy"],
+              [t("footer.terms"), "/terms"],
+              [t("footer.disclaimer"), "/disclaimer"],
             ].map(([label, href]) => (
               <li key={href}>
                 <Link className="hover:text-brand" href={href}>
@@ -59,9 +62,9 @@ export function Footer() {
       </div>
       <div className="container-page flex flex-col justify-between gap-3 border-t border-line py-6 text-xs leading-5 text-muted sm:flex-row">
         <p>
-          © {new Date().getFullYear()} Admitics. Made for your next chapter.
+          © {new Date().getFullYear()} Admitics. {t("footer.copyright")}
         </p>
-        <p>Guidance, not guarantees. Always confirm with official sources.</p>
+        <p>{t("footer.guidance")}</p>
       </div>
     </footer>
   );

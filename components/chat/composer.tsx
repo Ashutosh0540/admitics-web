@@ -2,6 +2,7 @@
 import { useRef, type FormEvent } from "react";
 import { ArrowUp, Paperclip, Square, X } from "lucide-react";
 import type { Document } from "@/types";
+import { useTranslation } from "@/lib/i18n";
 
 export function Composer({
   value,
@@ -25,6 +26,7 @@ export function Composer({
   onRemove: (id: string) => void;
 }) {
   const ref = useRef<HTMLTextAreaElement>(null);
+  const t = useTranslation();
   function submit(event: FormEvent) {
     event.preventDefault();
     if (value.trim() && !sending) onSend();
@@ -45,7 +47,7 @@ export function Composer({
                   type="button"
                   disabled={sending}
                   onClick={() => onRemove(doc.id)}
-                  aria-label={`Remove ${doc.name} from context`}
+                  aria-label={t("chat.removeFromContext", { name: doc.name })}
                   className="flex size-7 items-center justify-center"
                 >
                   <X size={12} />
@@ -55,7 +57,7 @@ export function Composer({
           </div>
         )}
         <label htmlFor="chat-question" className="sr-only">
-          Your question for Admitics
+          {t("chat.questionLabel")}
         </label>
         <textarea
           ref={ref}
@@ -77,7 +79,7 @@ export function Composer({
               if (value.trim() && !sending) onSend();
             }
           }}
-          placeholder="Ask about exams, colleges, or your next step…"
+          placeholder={t("chat.composerPlaceholder")}
           rows={2}
           maxLength={8000}
           className="block max-h-40 min-h-14 w-full resize-none rounded-lg px-2 py-2 text-sm leading-6 placeholder:text-muted/70"
@@ -90,11 +92,11 @@ export function Composer({
             className="flex min-h-10 items-center gap-2 rounded-lg px-2 text-xs text-muted hover:bg-mint disabled:opacity-50"
           >
             <Paperclip size={16} />
-            <span>Add context</span>
+            <span>{t("chat.addContext")}</span>
           </button>
           <div className="flex items-center gap-3">
             <span className="hidden text-[10px] text-muted sm:block">
-              Shift + Enter for a new line
+              {t("chat.newLineHint")}
             </span>
             {sending ? (
               <button
@@ -102,7 +104,7 @@ export function Composer({
                 type="button"
                 disabled={false}
                 onClick={onStop}
-                aria-label="Stop response"
+                aria-label={t("chat.stopResponse")}
                 className="flex size-11 items-center justify-center rounded-xl bg-brand text-white"
               >
                 <Square size={15} fill="currentColor" />
@@ -112,7 +114,7 @@ export function Composer({
                 key="send"
                 type="submit"
                 disabled={disabled || !value.trim()}
-                aria-label="Send question"
+                aria-label={t("chat.sendQuestion")}
                 className="flex size-11 items-center justify-center rounded-xl bg-brand text-white hover:bg-brand-dark disabled:opacity-40"
               >
                 <ArrowUp size={20} />
@@ -122,8 +124,7 @@ export function Composer({
         </div>
       </div>
       <p className="mt-2.5 px-2 text-center text-[10px] leading-5 text-muted">
-        Admitics can make mistakes. Confirm eligibility and deadlines with
-        official sources.
+        {t("chat.disclaimer")}
       </p>
     </form>
   );

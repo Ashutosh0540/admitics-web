@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { ErrorState, Skeleton } from "@/components/ui/primitives";
 import { AccountMenu } from "@/components/auth/account-menu";
 import { cn, formatDate } from "@/lib/utils";
+import { useTranslation } from "@/lib/i18n";
 
 export function ConversationSidebar({
   conversations,
@@ -35,17 +36,18 @@ export function ConversationSidebar({
   onRename: (conversation: Conversation) => void;
   onDelete: (conversation: Conversation) => void;
 }) {
+  const t = useTranslation();
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className="pb-6">
         <Logo />
       </div>
       <Button onClick={onNew} className="w-full justify-between">
-        New conversation <Plus size={17} />
+        {t("chat.newConversation")} <Plus size={17} />
       </Button>
       <div className="mt-8 flex-1 overflow-y-auto">
         <h2 className="mb-4 px-2 text-[10px] font-semibold tracking-[.14em] text-muted">
-          YOUR CONVERSATIONS
+          {t("chat.yourConversations")}
         </h2>
         {loading ? (
           <div className="space-y-3">
@@ -59,9 +61,9 @@ export function ConversationSidebar({
           <div className="px-2 py-6">
             <MessageSquare size={20} className="mb-3 text-muted/60" />
             <p className="text-xs leading-6 text-muted">
-              A fresh page.
+              {t("chat.freshPage")}
               <br />
-              Your conversations will live here.
+              {t("chat.conversationsLiveHere")}
             </p>
           </div>
         ) : (
@@ -94,14 +96,18 @@ export function ConversationSidebar({
                   <div className="flex">
                     <button
                       onClick={() => onRename(conversation)}
-                      aria-label={`Rename ${conversation.title}`}
+                      aria-label={t("chat.rename", {
+                        title: conversation.title,
+                      })}
                       className="flex size-8 items-center justify-center rounded-md text-muted hover:bg-white"
                     >
                       <Pencil size={12} />
                     </button>
                     <button
                       onClick={() => onDelete(conversation)}
-                      aria-label={`Delete ${conversation.title}`}
+                      aria-label={t("chat.deleteNamed", {
+                        title: conversation.title,
+                      })}
                       className="flex size-8 items-center justify-center rounded-md text-muted hover:bg-white hover:text-danger"
                     >
                       <Trash2 size={12} />
@@ -119,14 +125,14 @@ export function ConversationSidebar({
           className="flex items-center gap-2.5 rounded-lg px-2 py-3 text-xs text-muted hover:bg-white"
         >
           <LayoutDashboard size={16} />
-          My dashboard
+          {t("chat.myDashboard")}
         </Link>
         <Link
           href="/documents"
           className="flex items-center gap-2.5 rounded-lg px-2 py-3 text-xs text-muted hover:bg-white"
         >
           <FileText size={16} />
-          My documents
+          {t("chat.myDocuments")}
         </Link>
         <div className="mt-2">
           <AccountMenu />

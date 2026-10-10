@@ -105,6 +105,7 @@ export interface SendMessageInput {
   content: string;
   documentIds: string[];
   requestId: string;
+  locale?: "en" | "hi" | "te" | "ta";
 }
 export type ChatEvent =
   | { type: "delta"; text: string }

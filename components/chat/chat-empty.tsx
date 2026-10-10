@@ -1,3 +1,4 @@
+"use client";
 import {
   ArrowUpRight,
   BookOpen,
@@ -6,46 +7,47 @@ import {
   Wallet,
 } from "lucide-react";
 import { BrandMark } from "@/components/navigation/logo";
+import { useTranslation } from "@/lib/i18n";
 
-const starters = [
-  {
-    icon: Compass,
-    title: "Find my direction",
-    question: "What are my options after Class 12?",
-  },
-  {
-    icon: BookOpen,
-    title: "Understand an exam",
-    question: "How do I choose between JEE Main and CUET?",
-  },
-  {
-    icon: Wallet,
-    title: "Explore scholarships",
-    question: "What scholarships can I apply for?",
-  },
-  {
-    icon: FileCheck2,
-    title: "Get application-ready",
-    question: "What documents do I need for college applications?",
-  },
-];
 export function ChatEmpty({
   onSelect,
 }: {
   onSelect: (question: string) => void;
 }) {
+  const t = useTranslation();
+  const starters = [
+    {
+      icon: Compass,
+      title: t("chat.findDirection"),
+      question: t("chat.findDirectionQuestion"),
+    },
+    {
+      icon: BookOpen,
+      title: t("chat.understandExam"),
+      question: t("chat.understandExamQuestion"),
+    },
+    {
+      icon: Wallet,
+      title: t("chat.exploreScholarships"),
+      question: t("chat.exploreScholarshipsQuestion"),
+    },
+    {
+      icon: FileCheck2,
+      title: t("chat.applicationReady"),
+      question: t("chat.applicationReadyQuestion"),
+    },
+  ];
   return (
     <div className="mx-auto flex min-h-full max-w-2xl flex-col justify-center py-10 sm:py-14">
       <BrandMark className="mb-6 size-12 text-brand" />
-      <p className="eyebrow mb-4">YOUR NEXT CHAPTER STARTS HERE</p>
+      <p className="eyebrow mb-4">{t("chat.emptyEyebrow")}</p>
       <h1 className="editorial text-4xl sm:text-5xl">
-        What’s on your mind
+        {t("chat.emptyTitle")}
         <br />
-        <span className="text-brand">about your future?</span>
+        <span className="text-brand">{t("chat.emptyTitleAccent")}</span>
       </h1>
       <p className="mt-5 max-w-lg text-sm leading-7 text-muted">
-        A big decision, a small doubt, or a plan you’re still figuring out.
-        Let’s take it one question at a time.
+        {t("chat.emptyCopy")}
       </p>
       <div className="mt-8 grid gap-3 sm:grid-cols-2">
         {starters.map(({ icon: Icon, title, question }) => (

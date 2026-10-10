@@ -1,8 +1,9 @@
 import type { Exam, ExamDate, ExamSourceVerification } from "@/types";
+import { translate, type Locale } from "@/lib/i18n/messages";
 
-export function formatExamDate(date: string | null) {
-  if (!date) return "Not published";
-  return new Intl.DateTimeFormat("en-IN", {
+export function formatExamDate(date: string | null, locale: Locale = "en") {
+  if (!date) return translate(locale, "exams.notPublished");
+  return new Intl.DateTimeFormat(`${locale}-IN`, {
     day: "numeric",
     month: "short",
     year: "numeric",
@@ -10,29 +11,33 @@ export function formatExamDate(date: string | null) {
   }).format(new Date(`${date}T00:00:00Z`));
 }
 
-export function formatExamDateRange(date: ExamDate) {
-  if (!date.date) return "Not published";
+export function formatExamDateRange(date: ExamDate, locale: Locale = "en") {
+  if (!date.date) return translate(locale, "exams.notPublished");
   if (!date.endDate || date.endDate === date.date)
-    return formatExamDate(date.date);
-  return `${formatExamDate(date.date)} – ${formatExamDate(date.endDate)}`;
+    return formatExamDate(date.date, locale);
+  return `${formatExamDate(date.date, locale)} – ${formatExamDate(date.endDate, locale)}`;
 }
 
 export function examinationDate(exam: Exam) {
   return exam.dates.find((date) => date.kind === "examination") ?? null;
 }
 
-export function verificationLabel(status: ExamSourceVerification) {
-  if (status === "verified") return "Verified source";
-  if (status === "needs-review") return "Needs review";
-  return "Demo data";
+export function verificationLabel(
+  status: ExamSourceVerification,
+  locale: Locale = "en",
+) {
+  if (status === "verified") return translate(locale, "exams.verifiedSource");
+  if (status === "needs-review") return translate(locale, "exams.needsReview");
+  return translate(locale, "exams.demoData");
 }
 
 export function buildExamAskHref(
   exam: Exam,
   context: "exam-detail" | "eligibility-check" = "exam-detail",
+  locale: Locale = "en",
 ) {
   const params = new URLSearchParams({
-    q: `Help me understand ${exam.name} and what I should check before applying.`,
+    q: translate(locale, "detail.askPrompt", { title: exam.name }),
     examId: exam.id,
     examSlug: exam.slug,
     context,

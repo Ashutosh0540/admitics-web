@@ -11,16 +11,18 @@ import {
 } from "lucide-react";
 import { useAuth } from "./auth-provider";
 import { getAuth } from "@/lib/auth";
+import { useTranslation } from "@/lib/i18n";
 
 export function AccountMenu() {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const t = useTranslation();
   const [error, setError] = useState("");
   if (loading)
     return (
       <span
         className="h-9 w-16 animate-pulse rounded-lg bg-line/50"
-        aria-label="Restoring account"
+        aria-label={t("nav.restoringAccount")}
       />
     );
   if (!user)
@@ -29,7 +31,7 @@ export function AccountMenu() {
         href="/login"
         className="px-2 py-3 text-sm font-medium text-muted hover:text-brand"
       >
-        Log in
+        {t("nav.logIn")}
       </Link>
     );
   return (
@@ -46,8 +48,8 @@ export function AccountMenu() {
           {user.email}
         </p>
         {[
-          [LayoutDashboard, "Dashboard", "/dashboard"],
-          [Settings, "Account settings", "/settings"],
+          [LayoutDashboard, t("nav.dashboard"), "/dashboard"],
+          [Settings, t("nav.accountSettings"), "/settings"],
         ].map(([Icon, label, href]) => {
           const ItemIcon = Icon as typeof Settings;
           return (
@@ -73,14 +75,16 @@ export function AccountMenu() {
               router.push("/");
             } catch (reason) {
               setError(
-                reason instanceof Error ? reason.message : "Couldn't sign out.",
+                reason instanceof Error
+                  ? reason.message
+                  : t("common.unknownError"),
               );
             }
           }}
           className="flex w-full items-center gap-2 rounded-lg p-3 text-xs hover:bg-mint"
         >
           <LogOut size={15} />
-          Log out
+          {t("nav.logOut")}
         </button>
         {error && (
           <p role="alert" className="p-3 text-xs text-danger">

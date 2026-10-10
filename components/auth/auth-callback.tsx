@@ -13,7 +13,9 @@ export function AuthCallback() {
   useEffect(() => {
     let active = true;
     const url = new URL(window.location.href);
-    const failed = url.searchParams.has("error") || new URLSearchParams(url.hash.slice(1)).has("error");
+    const failed =
+      url.searchParams.has("error") ||
+      new URLSearchParams(url.hash.slice(1)).has("error");
     const code = failed ? null : url.searchParams.get("code");
     const next = safeNext(url.searchParams.get("next"));
     window.history.replaceState(null, "", "/auth/callback");
@@ -40,7 +42,7 @@ export function AuthCallback() {
           </ButtonLink>
         </>
       ) : (
-        <LoadingState label="Completing your sign-in…" />
+        <LoadingState />
       )}
     </div>
   );

@@ -20,7 +20,9 @@ test("actual Worker: conversation CRUD, pagination, AI JSON, idempotent replay a
   expect((await api.getConversation(conversation.id)).title).toBe("Local integration");
   expect((await api.listConversations()).some((item) => item.id === conversation.id)).toBe(true);
   expect((await api.updateConversation(conversation.id, { title: "Updated" })).title).toBe("Updated");
-  const input = { content: "Help me plan", documentIds: [], requestId: crypto.randomUUID() };
+  // Locale is retained by the UI input but intentionally stripped by the real
+  // adapter until the backend accepts a locale field.
+  const input = { content: "Help me plan", documentIds: [], requestId: crypto.randomUUID(), locale: "hi" as const };
   const first = await Array.fromAsync(api.sendMessage(conversation.id, input));
   expect(first[0].type).toBe("complete");
   const replay = await Array.fromAsync(api.sendMessage(conversation.id, input));

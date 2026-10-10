@@ -1,7 +1,9 @@
+"use client";
 import type { HTMLAttributes, InputHTMLAttributes, ReactNode } from "react";
 import { AlertCircle, ArrowRight, LoaderCircle, Sprout } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "./button";
+import { useTranslation } from "@/lib/i18n";
 
 export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
@@ -43,11 +45,8 @@ export function Input({
 }: InputHTMLAttributes<HTMLInputElement>) {
   return <input {...props} className={cn(inputStyles, className)} />;
 }
-export function LoadingState({
-  label = "Getting things ready…",
-}: {
-  label?: string;
-}) {
+export function LoadingState({ label }: { label?: string }) {
+  const t = useTranslation();
   return (
     <div
       role="status"
@@ -58,7 +57,7 @@ export function LoadingState({
         size={24}
         aria-hidden="true"
       />
-      <span>{label}</span>
+      <span>{label ?? t("common.loading")}</span>
     </div>
   );
 }
@@ -93,6 +92,7 @@ export function ErrorState({
   message: string;
   retry?: () => void;
 }) {
+  const t = useTranslation();
   return (
     <div
       role="alert"
@@ -112,7 +112,7 @@ export function ErrorState({
           onClick={retry}
           className="mt-3 min-h-9 py-1.5"
         >
-          Try again <ArrowRight size={14} />
+          {t("common.tryAgain")} <ArrowRight size={14} />
         </Button>
       )}
     </div>

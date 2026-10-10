@@ -36,6 +36,8 @@ import { ChatEmpty } from "./chat-empty";
 import { Composer } from "./composer";
 import { ConversationSidebar } from "./conversation-sidebar";
 import { MessageView } from "./message-view";
+import { useI18n } from "@/lib/i18n";
+import { LanguageSelector } from "@/components/navigation/language-selector";
 
 export function ChatWorkspace() {
   const { user } = useAuth();
@@ -46,6 +48,11 @@ export function ChatWorkspace() {
   );
 }
 function ChatInner() {
+  const { locale, t } = useI18n();
+  const translateRef = useRef(t);
+  useEffect(() => {
+    translateRef.current = t;
+  }, [t]);
   const params = useSearchParams();
   const [initial] = useState(() => ({
     id: params.get("id"),
@@ -119,7 +126,9 @@ function ChatInner() {
         const [conversation, result, docs] = await Promise.all([
           chatApi.get(id, controller.signal),
           chatApi.messages(id, controller.signal),
-          isPreview ? documentsApi.list(controller.signal) : Promise.resolve([]),
+          isPreview
+            ? documentsApi.list(controller.signal)
+            : Promise.resolve([]),
         ]);
         if (controller.signal.aborted) return;
         setMessages(result);
@@ -182,9 +191,7 @@ function ChatInner() {
         .then((docs) => {
           if (controller.signal.aborted) return;
           if (!docs.some((d) => d.id === initial.doc && d.status === "ready")) {
-            setError(
-              "This document is no longer available or isn't ready. Choose a ready document from Add context.",
-            );
+            setError(translateRef.current("chat.individualFilesUnavailable"));
           }
           setSelectedDocuments(
             docs.filter((d) => d.id === initial.doc && d.status === "ready"),
@@ -229,6 +236,7 @@ function ChatInner() {
           content: question.trim(),
           documentIds: selectedDocuments.map((d) => d.id),
           requestId: crypto.randomUUID(),
+          locale,
         };
     if (!input?.content) return;
     busy.current = true;
@@ -295,28 +303,28 @@ function ChatInner() {
             partial,
           ]);
         } else {
-           setMessages((current) => [
-             ...current.filter(
-               (m) =>
-                 m.id !== userId &&
-                 m.id !== assistantId &&
-                 m.id !== event.userMessage.id &&
-                 m.id !== event.assistantMessage?.id,
-             ),
-             event.userMessage,
-             ...(event.assistantMessage ? [event.assistantMessage] : []),
-           ]);
-           if (event.conversation)
-             setConversations((current) => [
-               event.conversation!,
-               ...current.filter((c) => c.id !== event.conversation!.id),
-             ]);
-           setPending(null);
-           setNotice(
-             event.assistantMessage
-               ? "Your response is ready."
-               : "Your question was saved. AI response is not available yet.",
-           );
+          setMessages((current) => [
+            ...current.filter(
+              (m) =>
+                m.id !== userId &&
+                m.id !== assistantId &&
+                m.id !== event.userMessage.id &&
+                m.id !== event.assistantMessage?.id,
+            ),
+            event.userMessage,
+            ...(event.assistantMessage ? [event.assistantMessage] : []),
+          ]);
+          if (event.conversation)
+            setConversations((current) => [
+              event.conversation!,
+              ...current.filter((c) => c.id !== event.conversation!.id),
+            ]);
+          setPending(null);
+          setNotice(
+            event.assistantMessage
+              ? t("chat.responseReady")
+              : t("chat.questionSaved"),
+          );
         }
       }
     } catch (reason) {
@@ -352,8 +360,8 @@ function ChatInner() {
     );
     if (!isPreview) {
       setPending(null);
-      setError("You stopped waiting for the answer. Your question may already be saved. Reload the conversation before sending it again.");
-    } else setNotice("Response stopped. You can retry when you're ready.");
+      setError(t("chat.stopWaiting"));
+    } else setNotice(t("chat.responseStopped"));
   }
   async function loadDocuments() {
     setDocumentsOpen(true);
@@ -388,12 +396,11 @@ function ChatInner() {
     />
   );
   const title =
-    conversations.find((c) => c.id === activeId)?.title ??
-    "A little clarity for your next step";
+    conversations.find((c) => c.id === activeId)?.title ?? t("chat.title");
   return (
     <div className="flex h-dvh overflow-hidden bg-paper">
       <aside
-        aria-label="Conversation history"
+        aria-label={t("chat.history")}
         className="hidden w-[275px] shrink-0 border-r border-line bg-[#f0f3ec] p-5 lg:block"
       >
         {sidebar}
@@ -402,7 +409,7 @@ function ChatInner() {
         <header className="flex min-h-[72px] shrink-0 items-center justify-between gap-4 border-b border-line px-4 sm:px-7">
           <div className="flex min-w-0 items-center gap-3">
             <button
-              aria-label="Open conversation history"
+              aria-label={t("chat.openHistory")}
               aria-expanded={sidebarOpen}
               onClick={() => setSidebarOpen(true)}
               className="flex size-11 shrink-0 items-center justify-center rounded-lg border border-line lg:hidden"
@@ -410,32 +417,34 @@ function ChatInner() {
               <Menu size={19} />
             </button>
             <div className="min-w-0">
-              <p className="truncate text-sm font-semibold">Ask Admitics</p>
+              <p className="truncate text-sm font-semibold">
+                {t("chat.askAdmitics")}
+              </p>
               <p className="mt-1 max-w-[45vw] truncate text-[11px] text-muted">
                 {title}
               </p>
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-4">
+            <LanguageSelector />
             {isPreview && (
               <Badge tone="amber" className="hidden sm:inline-flex">
-                Preview workspace
+                {t("chat.previewWorkspace")}
               </Badge>
             )}
             <Link
               href="/"
-              aria-label="Back to explore"
+              aria-label={t("chat.backToExplore")}
               className="flex min-h-11 items-center gap-2 text-xs text-muted"
             >
               <ArrowLeft size={14} />
-              <span className="hidden sm:block">Back to explore</span>
+              <span className="hidden sm:block">{t("chat.backToExplore")}</span>
             </Link>
           </div>
         </header>
         {isPreview && (
           <div className="shrink-0 border-b border-line bg-[#f4f1e6] px-4 py-2 text-center text-[10px] leading-5 text-muted">
-            Local preview · Example responses · History saved in this browser ·
-            No live AI or document analysis
+            {t("chat.previewNotice")}
           </div>
         )}
         <div
@@ -453,7 +462,7 @@ function ChatInner() {
         >
           <div className="mx-auto min-h-full max-w-3xl">
             {messageLoading ? (
-              <LoadingState label="Opening your conversation…" />
+              <LoadingState label={t("chat.opening")} />
             ) : messages.length === 0 && !error ? (
               <ChatEmpty
                 onSelect={(value) => {
@@ -484,7 +493,7 @@ function ChatInner() {
                         size={16}
                         className="animate-spin text-brand"
                       />
-                      Thinking through your next step…
+                      {t("chat.thinking")}
                     </div>
                   )}
                 {error && (
@@ -506,12 +515,15 @@ function ChatInner() {
                     <p>{notice}</p>
                     <Button variant="secondary" onClick={() => void send(true)}>
                       <RotateCcw size={14} />
-                      Retry response
+                      {t("chat.retryResponse")}
                     </Button>
                   </div>
                 )}
                 {notice && !pending && !sending && !isPreview && (
-                  <p role="status" className="mb-5 text-xs leading-6 text-muted">
+                  <p
+                    role="status"
+                    className="mb-5 text-xs leading-6 text-muted"
+                  >
                     {notice}
                   </p>
                 )}
@@ -538,13 +550,13 @@ function ChatInner() {
           />
         </div>
         <p role="status" aria-live="polite" className="sr-only">
-          {sending ? "Admitics is responding" : notice}
+          {sending ? t("chat.responding") : notice}
         </p>
       </main>
       <Modal
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
-        title="Your workspace"
+        title={t("chat.workspace")}
       >
         <div className="h-[min(68dvh,650px)]">{sidebar}</div>
         <button
@@ -552,21 +564,21 @@ function ChatInner() {
           className="mt-3 flex items-center gap-2 text-xs text-muted"
         >
           <PanelLeftClose size={15} />
-          Close history
+          {t("chat.closeHistory")}
         </button>
       </Modal>
       <Modal
         open={documentsOpen}
         onClose={() => setDocumentsOpen(false)}
-        title="Bring your documents into the conversation"
+        title={t("chat.bringDocuments")}
       >
         <p className="mb-4 text-sm leading-6 text-muted">
           {isPreview
-            ? "Choose ready documents for context. Processing and access checks are handled by Admitics."
-            : "Selecting individual files for a question is not available yet. You can manage your uploads in your document library."}
+            ? t("chat.chooseReadyDocuments")
+            : t("chat.individualFilesUnavailable")}
         </p>
         {documentsLoading ? (
-          <LoadingState label="Loading your documents…" />
+          <LoadingState label={t("chat.loadingDocuments")} />
         ) : documentsError ? (
           <ErrorState
             message={documentsError}
@@ -574,9 +586,13 @@ function ChatInner() {
           />
         ) : documentOptions.length === 0 ? (
           <EmptyState
-            title="No documents yet"
-            description="Upload an admissions notice or another supporting document to get started."
-            action={<ButtonLink href="/documents">Manage documents</ButtonLink>}
+            title={t("chat.noDocuments")}
+            description={t("chat.noDocumentsCopy")}
+            action={
+              <ButtonLink href="/documents">
+                {t("chat.manageDocuments")}
+              </ButtonLink>
+            }
           />
         ) : (
           <div className="max-h-72 space-y-2 overflow-y-auto">
@@ -587,7 +603,7 @@ function ChatInner() {
               >
                 <input
                   type="checkbox"
-                   disabled={!isPreview || doc.status !== "ready"}
+                  disabled={!isPreview || doc.status !== "ready"}
                   checked={selectedDocuments.some((d) => d.id === doc.id)}
                   onChange={(event) =>
                     setSelectedDocuments((current) =>
@@ -616,7 +632,7 @@ function ChatInner() {
             href="/documents"
             className="text-xs text-brand underline underline-offset-4"
           >
-            Manage documents
+            {t("chat.manageDocuments")}
           </Link>
           <Button onClick={() => setDocumentsOpen(false)}>
             <Check size={15} />
@@ -629,7 +645,7 @@ function ChatInner() {
         onClose={() => {
           if (!actionBusy) setRenaming(null);
         }}
-        title="Name this conversation"
+        title={t("chat.nameConversation")}
       >
         <form
           onSubmit={async (event) => {
@@ -653,7 +669,7 @@ function ChatInner() {
           }}
         >
           <label htmlFor="conversation-name" className="mb-2 block text-sm">
-            Conversation name
+            {t("chat.conversationName")}
           </label>
           <Input
             id="conversation-name"
@@ -669,7 +685,7 @@ function ChatInner() {
             </div>
           )}
           <Button type="submit" loading={actionBusy} className="mt-5">
-            Save name
+            {t("chat.saveName")}
           </Button>
         </form>
       </Modal>
@@ -678,11 +694,10 @@ function ChatInner() {
         onClose={() => {
           if (!actionBusy) setDeleting(null);
         }}
-        title="Delete this conversation?"
+        title={t("chat.deleteConversation")}
       >
         <p className="text-sm leading-7 text-muted">
-          “{deleting?.title}” and its messages will be removed. This can’t be
-          undone.
+          {t("chat.deleteConversationCopy", { title: deleting?.title ?? "" })}
         </p>
         {actionError && (
           <div className="mt-4">
@@ -695,7 +710,7 @@ function ChatInner() {
             disabled={actionBusy}
             onClick={() => setDeleting(null)}
           >
-            Keep conversation
+            {t("chat.keepConversation")}
           </Button>
           <Button
             variant="danger"
@@ -719,7 +734,7 @@ function ChatInner() {
               }
             }}
           >
-            Delete
+            {t("common.delete")}
           </Button>
         </div>
       </Modal>

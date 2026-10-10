@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useId, useRef, type ReactNode } from "react";
 import { X } from "lucide-react";
+import { useTranslation } from "@/lib/i18n";
 
 export function Modal({
   open,
@@ -15,6 +16,7 @@ export function Modal({
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const id = useId();
+  const t = useTranslation();
   useEffect(() => {
     const dialog = ref.current;
     if (open && !dialog?.open) dialog?.showModal();
@@ -46,7 +48,7 @@ export function Modal({
         <button
           type="button"
           onClick={onClose}
-          aria-label="Close dialog"
+          aria-label={t("nav.closeDialog")}
           className="flex size-11 items-center justify-center rounded-lg hover:bg-mint"
         >
           <X size={20} />

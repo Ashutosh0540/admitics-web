@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/primitives";
 import { formatDate } from "@/lib/utils";
 import { UsageCard } from "./usage-card";
+import { useTranslation } from "@/lib/i18n";
 
 async function loadDashboard(signal: AbortSignal) {
   const [user, conversations, documents, usage] = await Promise.all([
@@ -46,10 +47,11 @@ export function DashboardView() {
 }
 function DashboardInner() {
   const { data, loading, error, refresh } = useResource(loadDashboard);
+  const t = useTranslation();
   return (
     <div className="container-page py-10 sm:py-14">
       {loading ? (
-        <LoadingState label="Gathering your next steps…" />
+        <LoadingState label={t("dashboard.loading")} />
       ) : error ? (
         <ErrorState message={error} retry={refresh} />
       ) : (
@@ -57,17 +59,16 @@ function DashboardInner() {
           <>
             <div className="mb-9 flex flex-wrap items-end justify-between gap-5">
               <div>
-                <p className="eyebrow mb-3">YOUR EDUCATION, TOGETHER</p>
+                <p className="eyebrow mb-3">{t("dashboard.eyebrow")}</p>
                 <h1 className="editorial text-4xl sm:text-5xl">
-                  Hello, {data.user.name.split(" ")[0]}.
+                  {t("dashboard.hello", { name: data.user.name.split(" ")[0] })}
                 </h1>
                 <p className="mt-3 text-sm text-muted">
-                  A fresh question or a familiar conversation. Where shall we
-                  begin?
+                  {t("dashboard.intro")}
                 </p>
               </div>
               <ButtonLink href="/chat">
-                Ask Admitics <ArrowUpRight size={16} />
+                {t("nav.askAdmitics")} <ArrowUpRight size={16} />
               </ButtonLink>
             </div>
             <div className="grid gap-6 lg:grid-cols-[1.7fr_1fr]">
@@ -79,39 +80,38 @@ function DashboardInner() {
                     strokeWidth={1}
                   />
                   <p className="text-xs font-medium text-white/70">
-                    ONE QUESTION CAN OPEN A NEW DOOR
+                    {t("dashboard.oneQuestion")}
                   </p>
                   <h2 className="editorial mt-4 text-3xl">
-                    Let’s make your next step clearer.
+                    {t("dashboard.nextStep")}
                   </h2>
                   <p className="mt-3 max-w-md text-xs leading-6 text-white/80">
-                    Explore a course, compare an exam, or turn an application
-                    into a plan.
+                    {t("dashboard.nextStepCopy")}
                   </p>
                   <ButtonLink
                     href="/chat"
                     variant="inverse"
                     className="relative mt-5"
                   >
-                    Start a conversation <Plus size={15} />
+                    {t("home.startConversation")} <Plus size={15} />
                   </ButtonLink>
                 </div>
                 <Card>
                   <div className="mb-5 flex items-center justify-between">
                     <h2 className="text-sm font-semibold">
-                      Recent conversations
+                      {t("dashboard.recentConversations")}
                     </h2>
                     <Link href="/chat" className="text-xs text-brand">
-                      View all
+                      {t("dashboard.viewAll")}
                     </Link>
                   </div>
                   {data.conversations.length === 0 ? (
                     <EmptyState
-                      title="A conversation waiting to happen"
-                      description="Ask your first question. You can return to the conversation whenever you're ready."
+                      title={t("dashboard.waiting")}
+                      description={t("dashboard.waitingCopy")}
                       action={
                         <ButtonLink href="/chat" variant="secondary">
-                          Start with a question
+                          {t("dashboard.startQuestion")}
                         </ButtonLink>
                       }
                     />
@@ -132,8 +132,7 @@ function DashboardInner() {
                                 {c.title}
                               </p>
                               <p className="mt-1 truncate text-xs text-muted">
-                                {c.lastMessage ??
-                                  "Ready for your next question"}
+                                {c.lastMessage ?? t("dashboard.readyQuestion")}
                               </p>
                             </div>
                             <span className="shrink-0 text-[10px] text-muted">
@@ -147,7 +146,7 @@ function DashboardInner() {
                 </Card>
                 <Card>
                   <h2 className="mb-4 text-sm font-semibold">
-                    Recent questions
+                    {t("dashboard.recentQuestions")}
                   </h2>
                   {data.conversations.some((c) => c.lastMessage) ? (
                     <ul className="space-y-3">
@@ -171,8 +170,7 @@ function DashboardInner() {
                     </ul>
                   ) : (
                     <p className="text-xs leading-6 text-muted">
-                      Your questions will appear here as you explore with
-                      Admitics.
+                      {t("dashboard.questionsAppear")}
                     </p>
                   )}
                 </Card>
@@ -181,24 +179,25 @@ function DashboardInner() {
                 <UsageCard usage={data.usage} />
                 <Card>
                   <div className="mb-5 flex items-center justify-between">
-                    <h2 className="text-sm font-semibold">Your documents</h2>
+                    <h2 className="text-sm font-semibold">
+                      {t("dashboard.yourDocuments")}
+                    </h2>
                     <Link href="/documents" className="text-xs text-brand">
-                      Manage
+                      {t("common.manage")}
                     </Link>
                   </div>
                   {data.documents.length === 0 ? (
                     <div className="text-center">
                       <FileText size={26} className="mx-auto mb-3 text-brand" />
                       <p className="text-xs leading-6 text-muted">
-                        Bring an admissions notice or academic document into
-                        your journey.
+                        {t("dashboard.documentCopy")}
                       </p>
                       <ButtonLink
                         href="/documents"
                         variant="secondary"
                         className="mt-4 w-full"
                       >
-                        Add a document <Plus size={14} />
+                        {t("dashboard.addDocument")} <Plus size={14} />
                       </ButtonLink>
                     </div>
                   ) : (
@@ -238,7 +237,7 @@ function DashboardInner() {
                         {data.user.name}
                       </h2>
                       <p className="mt-1 truncate text-[11px] text-muted">
-                        {data.user.email || "Exploring as a guest"}
+                        {data.user.email || t("dashboard.guest")}
                       </p>
                     </div>
                   </div>
@@ -246,7 +245,7 @@ function DashboardInner() {
                     href="/settings"
                     className="mt-5 inline-flex items-center gap-2 text-xs font-medium text-brand"
                   >
-                    Manage your account <ArrowUpRight size={14} />
+                    {t("dashboard.manageAccount")} <ArrowUpRight size={14} />
                   </Link>
                 </Card>
               </div>

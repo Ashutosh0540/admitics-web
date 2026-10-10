@@ -11,25 +11,13 @@ import {
 } from "lucide-react";
 import { config, safeNext } from "@/lib/config";
 import { getAuth } from "@/lib/auth";
-import { errorMessage } from "@/lib/api/errors";
+import { localizedErrorMessage } from "@/lib/api/errors";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { ErrorState, Input } from "@/components/ui/primitives";
 import { BrandMark } from "@/components/navigation/logo";
+import { useI18n, useTranslation } from "@/lib/i18n";
 
 type AuthMode = "login" | "signup" | "forgot" | "reset";
-const headings = {
-  login: ["Welcome back.", "Your next chapter is right where you left it."],
-  signup: [
-    "Make room for possibility.",
-    "Keep your questions, plans, and guidance in one place.",
-  ],
-  forgot: [
-    "Let’s get you back in.",
-    "We’ll send you a link to reset your password.",
-  ],
-  reset: ["A fresh start.", "Choose a new password for your Admitics account."],
-};
-
 export function AuthPanel({ mode }: { mode: AuthMode }) {
   const fieldId = useId();
   const router = useRouter();
@@ -41,43 +29,50 @@ export function AuthPanel({ mode }: { mode: AuthMode }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const t = useTranslation();
+  const { locale } = useI18n();
+  const headings = {
+    login: [t("auth.loginTitle"), t("auth.loginCopy")],
+    signup: [t("auth.signupTitle"), t("auth.signupCopy")],
+    forgot: [t("auth.forgotTitle"), t("auth.forgotCopy")],
+    reset: [t("auth.resetTitle"), t("auth.resetCopy")],
+  };
   const preview = config.authMode === "mock";
   return (
     <section className="container-page grid gap-10 py-12 lg:grid-cols-2 lg:gap-20 lg:py-20">
       <div className="hidden flex-col justify-center rounded-3xl bg-mint p-12 lg:flex">
         <BrandMark className="mb-8 size-14 text-brand" />
-        <p className="eyebrow mb-5">A LITTLE CLARITY. A LOT OF POSSIBILITY.</p>
+        <p className="eyebrow mb-5">{t("auth.sideEyebrow")}</p>
         <p className="editorial text-6xl">
-          Your future.
+          {t("home.title3")}
           <br />
-          Your questions.
+          {t("chat.emptyTitle")}
           <br />
-          <span className="text-brand">Your space.</span>
+          <span className="text-brand">
+            {t("auth.sideTitle").split(". ").at(-1)}
+          </span>
         </p>
         <p className="mt-7 max-w-sm text-sm leading-8 text-muted">
-          Keep your education journey together. Pick up a conversation, bring in
-          a document, and find your next step.
+          {t("auth.sideCopy")}
         </p>
         <div className="mt-12 flex items-start gap-3 text-xs leading-6 text-brand">
           <ShieldCheck size={19} className="mt-1 shrink-0" />
           <p>
-            Identity is handled by Supabase Auth.
+            {t("auth.identity")}
             <br />
-            Your application access is authorized by Admitics.
+            {t("auth.authorized")}
           </p>
         </div>
       </div>
       <div className="mx-auto w-full max-w-md py-4">
         <p className="eyebrow mb-4">
-          {mode === "signup" ? "LET’S BEGIN" : "YOUR ADMITICS ACCOUNT"}
+          {mode === "signup" ? t("auth.signupEyebrow") : t("auth.loginEyebrow")}
         </p>
         <h1 className="editorial text-4xl sm:text-5xl">{headings[mode][0]}</h1>
         <p className="mt-4 text-sm leading-7 text-muted">{headings[mode][1]}</p>
         {preview && (
           <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-xs leading-6 text-amber">
-            <strong>Preview authentication.</strong> Credentials aren’t verified
-            or stored. Use a made-up email and password; don’t enter real
-            credentials. Google and email recovery need Supabase configuration.
+            <strong>{t("auth.previewAuth")}</strong> {t("auth.previewCopy")}
           </div>
         )}
         {success ? (
@@ -88,7 +83,7 @@ export function AuthPanel({ mode }: { mode: AuthMode }) {
             <CheckCircle2 size={25} className="mb-4 text-brand" />
             <p className="text-sm leading-7">{success}</p>
             <ButtonLink href="/login" variant="secondary" className="mt-5">
-              Back to log in
+              {t("auth.backToLogin")}
             </ButtonLink>
           </div>
         ) : (
@@ -103,18 +98,12 @@ export function AuthPanel({ mode }: { mode: AuthMode }) {
                   const auth = getAuth();
                   if (mode === "forgot") {
                     await auth.resetPassword(email);
-                    setSuccess(
-                      "If an account exists for that address, a password reset link will arrive shortly. Check your inbox and spam folder.",
-                    );
+                    setSuccess(t("auth.successForgot"));
                   } else if (mode === "reset") {
                     if (!(await auth.getSession()))
-                      throw new Error(
-                        "This recovery link is missing or expired. Request a new password reset link.",
-                      );
+                      throw new Error(t("auth.expiredRecovery"));
                     await auth.updatePassword(password);
-                    setSuccess(
-                      "Your password has been updated. You can now log in with your new password.",
-                    );
+                    setSuccess(t("auth.successReset"));
                   } else if (mode === "signup") {
                     const user = await auth.signUp(
                       name.trim(),
@@ -122,16 +111,13 @@ export function AuthPanel({ mode }: { mode: AuthMode }) {
                       password,
                     );
                     if (user) router.replace(safeNext(params.get("next")));
-                    else
-                      setSuccess(
-                        "Check your email to confirm your account. Then come back to log in and start your next chapter.",
-                      );
+                    else setSuccess(t("auth.successSignup"));
                   } else {
                     await auth.signIn(email, password);
                     router.replace(safeNext(params.get("next")));
                   }
                 } catch (reason) {
-                  setError(errorMessage(reason));
+                  setError(localizedErrorMessage(reason, locale));
                 } finally {
                   setBusy(false);
                 }
@@ -143,7 +129,7 @@ export function AuthPanel({ mode }: { mode: AuthMode }) {
                     htmlFor={`${fieldId}-name`}
                     className="mb-2 block text-xs font-medium"
                   >
-                    Your name
+                    {t("auth.name")}
                   </label>
                   <Input
                     id={`${fieldId}-name`}
@@ -163,7 +149,7 @@ export function AuthPanel({ mode }: { mode: AuthMode }) {
                     htmlFor={`${fieldId}-email`}
                     className="mb-2 block text-xs font-medium"
                   >
-                    Email address
+                    {t("auth.email")}
                   </label>
                   <Input
                     id={`${fieldId}-email`}
@@ -187,14 +173,16 @@ export function AuthPanel({ mode }: { mode: AuthMode }) {
                       htmlFor={`${fieldId}-password`}
                       className="text-xs font-medium"
                     >
-                      {mode === "reset" ? "New password" : "Password"}
+                      {mode === "reset"
+                        ? t("auth.newPassword")
+                        : t("auth.password")}
                     </label>
                     {mode === "login" && (
                       <Link
                         href="/forgot-password"
                         className="text-xs text-brand underline underline-offset-4"
                       >
-                        Forgot password?
+                        {t("auth.forgotPassword")}
                       </Link>
                     )}
                   </div>
@@ -219,7 +207,9 @@ export function AuthPanel({ mode }: { mode: AuthMode }) {
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       aria-label={
-                        showPassword ? "Hide password" : "Show password"
+                        showPassword
+                          ? t("auth.hidePassword")
+                          : t("auth.showPassword")
                       }
                       className="absolute top-1 right-1 flex size-10 items-center justify-center text-muted"
                     >
@@ -230,8 +220,8 @@ export function AuthPanel({ mode }: { mode: AuthMode }) {
                     id={`${fieldId}-password-help`}
                     className="mt-2 text-[11px] text-muted"
                   >
-                    At least 8 characters.
-                    {preview ? " A made-up password is fine for preview." : ""}
+                    {t("auth.passwordHelp")}
+                    {preview ? t("auth.previewPassword") : ""}
                   </p>
                 </div>
               )}
@@ -243,13 +233,13 @@ export function AuthPanel({ mode }: { mode: AuthMode }) {
                     className="mt-1 size-4 shrink-0 accent-brand"
                   />
                   <span>
-                    I agree to the{" "}
+                    {t("auth.agree")}{" "}
                     <Link href="/terms" className="text-brand underline">
-                      Terms
+                      {t("auth.terms")}
                     </Link>{" "}
                     and have read the{" "}
                     <Link href="/privacy" className="text-brand underline">
-                      Privacy notice
+                      {t("auth.privacyNotice")}
                     </Link>
                     .
                   </span>
@@ -258,14 +248,14 @@ export function AuthPanel({ mode }: { mode: AuthMode }) {
               {error && <ErrorState message={error} />}
               <Button type="submit" loading={busy} className="w-full">
                 {mode === "forgot"
-                  ? "Send reset link"
+                  ? t("auth.sendReset")
                   : mode === "reset"
-                    ? "Update password"
+                    ? t("auth.updatePassword")
                     : preview
-                      ? "Continue in preview"
+                      ? t("auth.continuePreview")
                       : mode === "signup"
-                        ? "Create account"
-                        : "Log in"}
+                        ? t("auth.createAccount")
+                        : t("nav.logIn")}
                 <ArrowRight size={15} />
               </Button>
             </form>
@@ -273,7 +263,7 @@ export function AuthPanel({ mode }: { mode: AuthMode }) {
               <>
                 <div className="my-6 flex items-center gap-4 text-[11px] text-muted">
                   <span className="h-px flex-1 bg-line" />
-                  or
+                  {t("auth.or")}
                   <span className="h-px flex-1 bg-line" />
                 </div>
                 <Button
@@ -285,7 +275,7 @@ export function AuthPanel({ mode }: { mode: AuthMode }) {
                     try {
                       await getAuth().signInWithGoogle();
                     } catch (reason) {
-                      setError(errorMessage(reason));
+                      setError(localizedErrorMessage(reason, locale));
                     } finally {
                       setBusy(false);
                     }
@@ -314,17 +304,19 @@ export function AuthPanel({ mode }: { mode: AuthMode }) {
                       d="M12 5.97c1.47 0 2.8.5 3.83 1.5l2.88-2.88A9.6 9.6 0 0 0 12 2a10 10 0 0 0-8.94 5.5l3.34 2.6C7.19 7.73 9.4 5.97 12 5.97Z"
                     />
                   </svg>
-                  Continue with Google
+                  {t("auth.continueGoogle")}
                 </Button>
                 <p className="mt-6 text-center text-xs text-muted">
                   {mode === "login"
-                    ? "New to Admitics?"
-                    : "Already have an account?"}{" "}
+                    ? t("auth.newToAdmitics")
+                    : t("auth.alreadyAccount")}{" "}
                   <Link
                     href={mode === "login" ? "/signup" : "/login"}
                     className="font-semibold text-brand underline underline-offset-4"
                   >
-                    {mode === "login" ? "Create an account" : "Log in"}
+                    {mode === "login"
+                      ? t("auth.createAnAccount")
+                      : t("nav.logIn")}
                   </Link>
                 </p>
               </>
@@ -336,8 +328,8 @@ export function AuthPanel({ mode }: { mode: AuthMode }) {
                   className="text-xs text-brand underline underline-offset-4"
                 >
                   {mode === "reset"
-                    ? "Request a new recovery link"
-                    : "Back to log in"}
+                    ? t("auth.requestRecovery")
+                    : t("auth.backToLogin")}
                 </Link>
               </p>
             )}

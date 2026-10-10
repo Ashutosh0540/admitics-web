@@ -20,18 +20,25 @@ Set `NEXT_PUBLIC_API_MODE=real`, `NEXT_PUBLIC_AUTH_MODE=supabase`, `NEXT_PUBLIC_
 
 In Supabase, enable the intended providers and authorize the frontend `/auth/callback` and `/reset-password` redirect URLs. Auth uses browser PKCE. Bearer tokens go only to the configured Admitics API. There are no frontend API routes, LLM credentials, storage credentials, databases, or AI orchestration.
 
-## Check
+## Build and check locally
 
 ```sh
+npm install
 npm run typecheck
 npm run lint
-npm run format:check
 npm run build
 npx playwright install chromium
+npm run test:local
 npm test
 ```
 
-Browser tests start a local production server (port 3100), exercise desktop/mobile flows, inspect navigation, overflow and console errors, and cover preview persistence, retry, documents, authentication, and content. Build with preview modes for these tests; the test server exports them explicitly as well.
+`npm run build` creates the static export in `out/`. To serve that build directly, run
+`npm run serve:export -- --port 3100` and open http://localhost:3100. The server supports
+clean route URLs and files such as `/_next/static/...`. `npm test` serves the existing
+`out/` export automatically on port 3100 and runs desktop and mobile browser checks.
+Set `NEXT_PUBLIC_API_MODE=mock` and `NEXT_PUBLIC_AUTH_MODE=mock` when building to exercise
+the local preview; those are also the browser test server defaults. `npm run test:local`
+runs focused Node tests for translation catalogs and static export serving without a browser.
 
 Real local acceptance uses `ADMITICS_AI_PATH="/path/to/admitics-ai" npm run test:integration`.
 This runs actual Worker/D1/R2 and real-adapter browser flows with ephemeral signed
