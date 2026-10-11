@@ -375,6 +375,51 @@ test("preview signup, profile, logout, login and account isolation", async ({
   );
 });
 
+test("account menu stays visible and its settings action works at desktop and mobile sizes", async ({
+  page,
+}) => {
+  await page.goto("/signup");
+  await page.getByLabel("Your name", { exact: true }).fill("Mira Student");
+  await page
+    .getByLabel("Email address", { exact: true })
+    .fill("menu@example.com");
+  await page.getByLabel("Password", { exact: true }).fill("preview-only");
+  await page.getByRole("checkbox").check();
+  await page.getByRole("button", { name: "Continue in preview" }).click();
+  await page.goto("/chat");
+
+  for (const viewport of [
+    { width: 375, height: 812 },
+    { width: 1440, height: 900 },
+  ]) {
+    await page.setViewportSize(viewport);
+    if (viewport.width < 1024) {
+      await page
+        .getByRole("button", { name: "Open conversation history" })
+        .click();
+      await expect(
+        page.getByRole("dialog", { name: "Your workspace" }),
+      ).toBeVisible();
+    }
+
+    await page.getByRole("button", { name: /Mira Student/ }).click();
+    const menu = page.getByRole("menu", { name: "Account settings" });
+    await expect(menu).toBeVisible();
+    await expect(menu.getByText("menu@example.com")).toBeVisible();
+    const bounds = await menu.boundingBox();
+    expect(bounds).not.toBeNull();
+    expect(bounds!.x).toBeGreaterThanOrEqual(0);
+    expect(bounds!.y).toBeGreaterThanOrEqual(0);
+    expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(viewport.width);
+    expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(viewport.height);
+
+    await menu.getByRole("menuitem", { name: "Account settings" }).click();
+    await expect(page).toHaveURL(/\/settings$/);
+    await expect(page.getByLabel("Display name")).toHaveValue("Mira Student");
+    await page.goto("/chat");
+  }
+});
+
 test("authentication recovery and Google expose configuration honestly", async ({
   page,
 }) => {
