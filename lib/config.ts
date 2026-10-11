@@ -10,6 +10,29 @@ export const config = {
 
 export const isPreview = config.apiMode === "mock";
 
+function publicCapability(value: string | undefined, fallback: boolean) {
+  return value === undefined ? fallback : value.trim().toLowerCase() === "true";
+}
+
+// These flags control presentation only. The API remains authoritative for
+// authorization and feature availability. Mock mode keeps existing local
+// development and browser-test behavior unless a test explicitly overrides it.
+export const capabilities = {
+  ai: publicCapability(process.env.NEXT_PUBLIC_AI_ENABLED, isPreview),
+  documents: publicCapability(
+    process.env.NEXT_PUBLIC_DOCUMENTS_ENABLED,
+    isPreview,
+  ),
+  documentProcessing: publicCapability(
+    process.env.NEXT_PUBLIC_DOCUMENT_PROCESSING_ENABLED,
+    isPreview,
+  ),
+  productControls: publicCapability(
+    process.env.NEXT_PUBLIC_PRODUCT_CONTROLS_ENABLED,
+    isPreview,
+  ),
+} as const;
+
 export function safeNext(value: string | null): string {
   return value &&
     value.startsWith("/") &&

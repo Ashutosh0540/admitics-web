@@ -11,6 +11,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "playwright test",
+    "test:staging-ui": "node scripts/test-staging-ui.mjs",
     "test:local": "node --test tests/tooling/*.test.mjs",
     "serve:export": "node scripts/serve-export.mjs",
     "test:integration": "playwright test --config playwright.integration.config.ts",

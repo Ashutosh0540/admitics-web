@@ -11,6 +11,8 @@ import { chatApi } from "@/lib/api/chat";
 import { documentsApi } from "@/lib/api/documents";
 import { userApi } from "@/lib/api/user";
 import { usageApi } from "@/lib/api/usage";
+import { capabilities } from "@/lib/config";
+import { loadDashboardData } from "@/lib/dashboard/load-dashboard";
 import { useResource } from "@/lib/use-resource";
 import { useAuth } from "@/components/auth/auth-provider";
 import { AccountGate } from "@/components/auth/account-gate";
@@ -27,15 +29,13 @@ import { formatDate } from "@/lib/utils";
 import { UsageCard } from "./usage-card";
 import { useTranslation } from "@/lib/i18n";
 
-async function loadDashboard(signal: AbortSignal) {
-  const [user, conversations, documents, usage] = await Promise.all([
-    userApi.me(signal),
-    chatApi.list(signal),
-    documentsApi.list(signal),
-    usageApi.get(signal),
-  ]);
-  return { user, conversations, documents, usage };
-}
+const loadDashboard = (signal: AbortSignal) =>
+  loadDashboardData(signal, capabilities, {
+    getUser: userApi.me,
+    listConversations: chatApi.list,
+    listDocuments: documentsApi.list,
+    getUsage: usageApi.get,
+  });
 export function DashboardView() {
   const { user } = useAuth();
   return (
@@ -176,57 +176,80 @@ function DashboardInner() {
                 </Card>
               </div>
               <div className="space-y-6">
-                <UsageCard usage={data.usage} />
-                <Card>
-                  <div className="mb-5 flex items-center justify-between">
-                    <h2 className="text-sm font-semibold">
-                      {t("dashboard.yourDocuments")}
-                    </h2>
-                    <Link href="/documents" className="text-xs text-brand">
-                      {t("common.manage")}
-                    </Link>
-                  </div>
-                  {data.documents.length === 0 ? (
-                    <div className="text-center">
-                      <FileText size={26} className="mx-auto mb-3 text-brand" />
-                      <p className="text-xs leading-6 text-muted">
-                        {t("dashboard.documentCopy")}
-                      </p>
-                      <ButtonLink
-                        href="/documents"
-                        variant="secondary"
-                        className="mt-4 w-full"
-                      >
-                        {t("dashboard.addDocument")} <Plus size={14} />
-                      </ButtonLink>
+                {capabilities.productControls &&
+                  (data.usage ? (
+                    <UsageCard usage={data.usage} />
+                  ) : data.usageError ? (
+                    <Card>
+                      <h2 className="mb-3 text-sm font-semibold">
+                        {t("usage.title")}
+                      </h2>
+                      <ErrorState message={data.usageError} retry={refresh} />
+                    </Card>
+                  ) : null)}
+                {capabilities.documents && (
+                  <Card>
+                    <div className="mb-5 flex items-center justify-between">
+                      <h2 className="text-sm font-semibold">
+                        {t("dashboard.yourDocuments")}
+                      </h2>
+                      <Link href="/documents" className="text-xs text-brand">
+                        {t("common.manage")}
+                      </Link>
                     </div>
-                  ) : (
-                    <ul className="space-y-4">
-                      {data.documents.slice(0, 3).map((doc) => (
-                        <li key={doc.id} className="flex items-center gap-3">
-                          <FileText size={19} className="shrink-0 text-brand" />
-                          <div className="min-w-0 flex-1">
-                            <p className="truncate text-xs font-medium">
-                              {doc.name}
-                            </p>
-                            <Badge
-                              tone={
-                                doc.status === "failed"
-                                  ? "red"
-                                  : doc.status === "ready"
-                                    ? "green"
-                                    : "amber"
-                              }
-                              className="mt-1 text-[10px]"
-                            >
-                              {doc.status}
-                            </Badge>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </Card>
+                    {data.documentsError ? (
+                      <ErrorState
+                        message={data.documentsError}
+                        retry={refresh}
+                      />
+                    ) : data.documents?.length === 0 ? (
+                      <div className="text-center">
+                        <FileText
+                          size={26}
+                          className="mx-auto mb-3 text-brand"
+                        />
+                        <p className="text-xs leading-6 text-muted">
+                          {t("dashboard.documentCopy")}
+                        </p>
+                        <ButtonLink
+                          href="/documents"
+                          variant="secondary"
+                          className="mt-4 w-full"
+                        >
+                          {t("dashboard.addDocument")} <Plus size={14} />
+                        </ButtonLink>
+                      </div>
+                    ) : (
+                      <ul className="space-y-4">
+                        {data.documents?.slice(0, 3).map((doc) => (
+                          <li key={doc.id} className="flex items-center gap-3">
+                            <FileText
+                              size={19}
+                              className="shrink-0 text-brand"
+                            />
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-xs font-medium">
+                                {doc.name}
+                              </p>
+                              <Badge
+                                tone={
+                                  doc.status === "failed"
+                                    ? "red"
+                                    : doc.status === "ready"
+                                      ? "green"
+                                      : "amber"
+                                }
+                                className="mt-1 text-[10px]"
+                              >
+                                {doc.status}
+                              </Badge>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </Card>
+                )}
                 <Card>
                   <div className="flex items-center gap-3">
                     <span className="flex size-10 items-center justify-center rounded-full bg-mint text-brand">

@@ -40,6 +40,30 @@ Set `NEXT_PUBLIC_API_MODE=mock` and `NEXT_PUBLIC_AUTH_MODE=mock` when building t
 the local preview; those are also the browser test server defaults. `npm run test:local`
 runs focused Node tests for translation catalogs and static export serving without a browser.
 
+### Staging UI capabilities
+
+Set these public build-time presentation flags to `false` in the staging Pages
+project environment:
+
+```text
+NEXT_PUBLIC_AI_ENABLED=false
+NEXT_PUBLIC_DOCUMENTS_ENABLED=false
+NEXT_PUBLIC_DOCUMENT_PROCESSING_ENABLED=false
+NEXT_PUBLIC_PRODUCT_CONTROLS_ENABLED=false
+```
+
+Keep the staging API base URL and Supabase authentication variables in the
+staging Pages environment as already configured. These flags only control what
+the frontend presents; the Worker remains authoritative for authorization and
+feature availability. In mock mode, omitted flags default to enabled so local
+preview and browser-test behavior stays intact. In real API mode, omitted flags
+default to disabled.
+
+`npm run test:staging-ui` builds temporary mock static exports and tests them
+locally without calling staging services. It first builds with all four flags
+set to `false`, then builds a second export with Documents enabled and document
+processing disabled to verify uploads remain available without processing.
+
 Real local acceptance uses `ADMITICS_AI_PATH="/path/to/admitics-ai" npm run test:integration`.
 This runs actual Worker/D1/R2 and real-adapter browser flows with ephemeral signed
 identity and loopback provider fixtures. It does not prove live Supabase/Google,

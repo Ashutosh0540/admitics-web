@@ -3,10 +3,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, LogOut } from "lucide-react";
 import { getAuth } from "@/lib/auth";
-import { config } from "@/lib/config";
+import { capabilities, config } from "@/lib/config";
 import { usageApi } from "@/lib/api/usage";
 import { errorMessage } from "@/lib/api/errors";
 import { useResource } from "@/lib/use-resource";
+import { loadSettingsUsage } from "@/lib/account/load-settings-usage";
 import { AccountGate } from "@/components/auth/account-gate";
 import { useAuth } from "@/components/auth/auth-provider";
 import { WorkspaceNav } from "@/components/navigation/workspace-nav";
@@ -22,7 +23,8 @@ import { UsageCard } from "@/components/dashboard/usage-card";
 import type { User } from "@/types";
 import { useTranslation } from "@/lib/i18n";
 
-const loadUsage = (signal: AbortSignal) => usageApi.get(signal);
+const loadUsage = (signal: AbortSignal) =>
+  loadSettingsUsage(capabilities.productControls, signal, usageApi.get);
 export function SettingsView() {
   const { user } = useAuth();
   const t = useTranslation();
@@ -68,7 +70,9 @@ function SettingsInner({ user }: { user: User }) {
       <h1 className="editorial mb-9 text-4xl sm:text-5xl">
         {t("settings.title")}
       </h1>
-      <div className="grid gap-6 lg:grid-cols-[1.7fr_1fr]">
+      <div
+        className={`grid gap-6 ${capabilities.productControls ? "lg:grid-cols-[1.7fr_1fr]" : ""}`}
+      >
         <div className="space-y-6">
           <Card>
             <h2 className="text-base font-semibold">{t("settings.profile")}</h2>
@@ -175,15 +179,17 @@ function SettingsInner({ user }: { user: User }) {
             </div>
           </Card>
         </div>
-        <div>
-          {loading ? (
-            <LoadingState label={t("settings.checkingUsage")} />
-          ) : usageError ? (
-            <ErrorState message={usageError} retry={refresh} />
-          ) : (
-            usage && <UsageCard usage={usage} />
-          )}
-        </div>
+        {capabilities.productControls && (
+          <div>
+            {loading ? (
+              <LoadingState label={t("settings.checkingUsage")} />
+            ) : usageError ? (
+              <ErrorState message={usageError} retry={refresh} />
+            ) : (
+              usage && <UsageCard usage={usage} />
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

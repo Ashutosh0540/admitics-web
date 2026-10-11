@@ -2,6 +2,7 @@ import type { ApiAdapter } from "./contracts";
 import type { Conversation, Document, Message, Source, Usage } from "@/types";
 import { demoExams, getDemoExam } from "@/lib/exams/mock-data";
 import { getAuth } from "@/lib/auth";
+import { capabilities } from "@/lib/config";
 import { ApiClientError } from "./errors";
 import { isConversation, isDocument, isMessage } from "./validation";
 
@@ -242,6 +243,23 @@ export const mockApi: ApiAdapter = {
       save();
     }
     await delay(350, signal);
+    if (!capabilities.ai) {
+      if (signal?.aborted) throw new DOMException("Cancelled", "AbortError");
+      const current = await store();
+      const latest = find(current.state.conversations, id);
+      if (!current.state.messages.some((m) => m.id === userMessage.id))
+        throw new ApiClientError("NOT_FOUND", "This conversation was removed.");
+      latest.title =
+        latest.title === "A new chapter"
+          ? input.content.slice(0, 64)
+          : latest.title;
+      latest.lastMessage = input.content;
+      latest.updatedAt = now();
+      latest.documentIds = input.documentIds;
+      current.save();
+      yield { type: "complete", userMessage, conversation: latest };
+      return;
+    }
     if (
       input.content.includes("[demo:error]") &&
       !sessionStorage.getItem(`admitics:retry:${input.requestId}`)

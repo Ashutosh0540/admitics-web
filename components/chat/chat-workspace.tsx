@@ -20,7 +20,7 @@ import type {
 import { chatApi } from "@/lib/api/chat";
 import { documentsApi } from "@/lib/api/documents";
 import { errorMessage, isAbort } from "@/lib/api/errors";
-import { isPreview } from "@/lib/config";
+import { capabilities, isPreview } from "@/lib/config";
 import { AccountGate } from "@/components/auth/account-gate";
 import { useAuth } from "@/components/auth/auth-provider";
 import { Button, ButtonLink } from "@/components/ui/button";
@@ -126,7 +126,7 @@ function ChatInner() {
         const [conversation, result, docs] = await Promise.all([
           chatApi.get(id, controller.signal),
           chatApi.messages(id, controller.signal),
-          isPreview
+          capabilities.documents && isPreview
             ? documentsApi.list(controller.signal)
             : Promise.resolve([]),
         ]);
@@ -166,7 +166,9 @@ function ChatInner() {
       void Promise.all([
         chatApi.get(initial.id, controller.signal),
         chatApi.messages(initial.id, controller.signal),
-        isPreview ? documentsApi.list(controller.signal) : Promise.resolve([]),
+        capabilities.documents && isPreview
+          ? documentsApi.list(controller.signal)
+          : Promise.resolve([]),
       ])
         .then(([conversation, result, docs]) => {
           if (controller.signal.aborted) return;
@@ -185,7 +187,10 @@ function ChatInner() {
           if (!controller.signal.aborted) setMessageLoading(false);
         });
     }
-    if (initial.doc)
+    if (initial.doc && !capabilities.documents) {
+      setError(translateRef.current("documents.unavailableStaging"));
+      setMessageLoading(false);
+    } else if (initial.doc)
       void documentsApi
         .list(controller.signal)
         .then((docs) => {
@@ -323,7 +328,9 @@ function ChatInner() {
           setNotice(
             event.assistantMessage
               ? t("chat.responseReady")
-              : t("chat.questionSaved"),
+              : capabilities.ai
+                ? t("chat.questionSaved")
+                : t("chat.aiDisabledSaved"),
           );
         }
       }
@@ -364,6 +371,7 @@ function ChatInner() {
     } else setNotice(t("chat.responseStopped"));
   }
   async function loadDocuments() {
+    if (!capabilities.documents) return;
     setDocumentsOpen(true);
     setDocumentsLoading(true);
     setDocumentsError("");
@@ -442,10 +450,26 @@ function ChatInner() {
             </Link>
           </div>
         </header>
-        {isPreview && (
+        {isPreview && capabilities.ai && (
           <div className="shrink-0 border-b border-line bg-[#f4f1e6] px-4 py-2 text-center text-[10px] leading-5 text-muted">
             {t("chat.previewNotice")}
           </div>
+        )}
+        {!capabilities.ai && (
+          <p
+            role="note"
+            className="shrink-0 border-b border-line bg-[#f4f1e6] px-4 py-2 text-center text-[11px] leading-5 text-muted"
+          >
+            {t("chat.aiDisabledNotice")}
+          </p>
+        )}
+        {!capabilities.documents && (
+          <p
+            role="note"
+            className="shrink-0 border-b border-line bg-white px-4 py-2 text-center text-[11px] leading-5 text-muted"
+          >
+            {t("documents.unavailableStaging")}
+          </p>
         )}
         <div
           ref={scrollRef}
@@ -493,7 +517,9 @@ function ChatInner() {
                         size={16}
                         className="animate-spin text-brand"
                       />
-                      {t("chat.thinking")}
+                      {capabilities.ai
+                        ? t("chat.thinking")
+                        : t("chat.savingQuestion")}
                     </div>
                   )}
                 {error && (
@@ -538,6 +564,8 @@ function ChatInner() {
             onChange={setQuestion}
             onSend={() => void send()}
             sending={sending}
+            aiEnabled={capabilities.ai}
+            documentsEnabled={capabilities.documents}
             disabled={messageLoading}
             onStop={stop}
             onDocuments={() => void loadDocuments()}
@@ -550,7 +578,11 @@ function ChatInner() {
           />
         </div>
         <p role="status" aria-live="polite" className="sr-only">
-          {sending ? t("chat.responding") : notice}
+          {sending
+            ? capabilities.ai
+              ? t("chat.responding")
+              : t("chat.savingQuestion")
+            : notice}
         </p>
       </main>
       <Modal
@@ -568,7 +600,7 @@ function ChatInner() {
         </button>
       </Modal>
       <Modal
-        open={documentsOpen}
+        open={capabilities.documents && documentsOpen}
         onClose={() => setDocumentsOpen(false)}
         title={t("chat.bringDocuments")}
       >

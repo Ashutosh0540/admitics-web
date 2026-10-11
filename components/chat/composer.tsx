@@ -9,6 +9,8 @@ export function Composer({
   onChange,
   onSend,
   sending,
+  aiEnabled,
+  documentsEnabled,
   disabled,
   onStop,
   onDocuments,
@@ -19,6 +21,8 @@ export function Composer({
   onChange: (value: string) => void;
   onSend: () => void;
   sending: boolean;
+  aiEnabled: boolean;
+  documentsEnabled: boolean;
   disabled: boolean;
   onStop: () => void;
   onDocuments: () => void;
@@ -85,15 +89,17 @@ export function Composer({
           className="block max-h-40 min-h-14 w-full resize-none rounded-lg px-2 py-2 text-sm leading-6 placeholder:text-muted/70"
         />
         <div className="mt-1 flex items-center justify-between gap-3">
-          <button
-            type="button"
-            onClick={onDocuments}
-            disabled={sending || disabled}
-            className="flex min-h-10 items-center gap-2 rounded-lg px-2 text-xs text-muted hover:bg-mint disabled:opacity-50"
-          >
-            <Paperclip size={16} />
-            <span>{t("chat.addContext")}</span>
-          </button>
+          {documentsEnabled && (
+            <button
+              type="button"
+              onClick={onDocuments}
+              disabled={sending || disabled}
+              className="flex min-h-10 items-center gap-2 rounded-lg px-2 text-xs text-muted hover:bg-mint disabled:opacity-50"
+            >
+              <Paperclip size={16} />
+              <span>{t("chat.addContext")}</span>
+            </button>
+          )}
           <div className="flex items-center gap-3">
             <span className="hidden text-[10px] text-muted sm:block">
               {t("chat.newLineHint")}
@@ -104,7 +110,9 @@ export function Composer({
                 type="button"
                 disabled={false}
                 onClick={onStop}
-                aria-label={t("chat.stopResponse")}
+                aria-label={
+                  aiEnabled ? t("chat.stopResponse") : t("chat.stopSaving")
+                }
                 className="flex size-11 items-center justify-center rounded-xl bg-brand text-white"
               >
                 <Square size={15} fill="currentColor" />

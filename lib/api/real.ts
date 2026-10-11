@@ -139,6 +139,8 @@ export function createRealApi(transport: typeof request = request): ApiAdapter {
       if (data.message === undefined)
         throw contractMismatch("Expected message.");
       const userMessage = mapMessage(data.message);
+      // A successful save can intentionally omit assistantMessage when the
+      // backend has AI disabled. Never synthesize an assistant response here.
       const assistantMessage = data.assistantMessage
         ? mapMessage(data.assistantMessage, data.knowledge)
         : undefined;

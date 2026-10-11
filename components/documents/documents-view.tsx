@@ -13,7 +13,8 @@ import type { Document } from "@/types";
 import { documentsApi } from "@/lib/api/documents";
 import { usageApi } from "@/lib/api/usage";
 import { errorMessage, isAbort } from "@/lib/api/errors";
-import { isPreview } from "@/lib/config";
+import { capabilities, isPreview } from "@/lib/config";
+import { processUploadedDocument } from "@/lib/documents/process-upload";
 import { useResource } from "@/lib/use-resource";
 import { formatBytes, formatDate } from "@/lib/utils";
 import { AccountGate } from "@/components/auth/account-gate";
@@ -30,13 +31,28 @@ import {
 import { Modal } from "@/components/ui/modal";
 import { UsageCard } from "@/components/dashboard/usage-card";
 import { useTranslation } from "@/lib/i18n";
+import type { Usage } from "@/types";
 
-async function loadDocuments(signal: AbortSignal) {
+type DocumentsData = {
+  documents: Document[];
+  usage: Usage | null;
+  usageError: string | null;
+};
+
+async function loadDocuments(signal: AbortSignal): Promise<DocumentsData> {
   const [documents, usage] = await Promise.all([
     documentsApi.list(signal),
-    usageApi.get(signal),
+    capabilities.productControls
+      ? usageApi
+          .get(signal)
+          .then((value) => ({ value, error: null }))
+          .catch((reason: unknown) => {
+            if (isAbort(reason)) throw reason;
+            return { value: null, error: errorMessage(reason) };
+          })
+      : Promise.resolve({ value: null, error: null }),
   ]);
-  return { documents, usage };
+  return { documents, usage: usage.value, usageError: usage.error };
 }
 export function DocumentsView() {
   const { user } = useAuth();
@@ -48,6 +64,27 @@ export function DocumentsView() {
   );
 }
 function DocumentsInner() {
+  const t = useTranslation();
+  if (!capabilities.documents)
+    return (
+      <div className="container-page py-10 sm:py-14">
+        <div className="mb-9">
+          <p className="eyebrow mb-3">{t("documents.eyebrow")}</p>
+          <h1 className="editorial text-4xl sm:text-5xl">
+            {t("documents.title")}
+          </h1>
+        </div>
+        <Card role="note">
+          <p className="text-sm leading-7 text-muted">
+            {t("documents.unavailableStaging")}
+          </p>
+        </Card>
+      </div>
+    );
+  return <EnabledDocumentsInner />;
+}
+
+function EnabledDocumentsInner() {
   const { data, error, loading, refresh } = useResource(loadDocuments);
   const [uploading, setUploading] = useState(false);
   const [uploadName, setUploadName] = useState("");
@@ -84,31 +121,33 @@ function DocumentsInner() {
     if (uploading || !data) return;
     setUploadError("");
     setNotice("");
-    const limits = data.usage.uploadLimits;
-    const extension = `.${file.name.split(".").pop()?.toLowerCase()}`;
-    if (
-      !limits.allowedExtensions.includes(extension) ||
-      (file.type && !limits.allowedMimeTypes.includes(file.type))
-    ) {
-      setUploadError(
-        t("documents.chooseTypes", {
-          types: limits.allowedExtensions.join(", "),
-        }),
-      );
-      return;
-    }
-    if (file.size === 0 || file.size > limits.maxFileBytes) {
-      setUploadError(
-        t("documents.chooseSize", { size: formatBytes(limits.maxFileBytes) }),
-      );
-      return;
-    }
-    if (
-      data.usage.documents.used >= data.usage.documents.limit ||
-      data.usage.storage.used + file.size > data.usage.storage.limit
-    ) {
-      setUploadError(t("documents.limit"));
-      return;
+    const limits = data.usage?.uploadLimits;
+    if (limits) {
+      const extension = `.${file.name.split(".").pop()?.toLowerCase()}`;
+      if (
+        !limits.allowedExtensions.includes(extension) ||
+        (file.type && !limits.allowedMimeTypes.includes(file.type))
+      ) {
+        setUploadError(
+          t("documents.chooseTypes", {
+            types: limits.allowedExtensions.join(", "),
+          }),
+        );
+        return;
+      }
+      if (file.size === 0 || file.size > limits.maxFileBytes) {
+        setUploadError(
+          t("documents.chooseSize", { size: formatBytes(limits.maxFileBytes) }),
+        );
+        return;
+      }
+      if (
+        data.usage!.documents.used >= data.usage!.documents.limit ||
+        data.usage!.storage.used + file.size > data.usage!.storage.limit
+      ) {
+        setUploadError(t("documents.limit"));
+        return;
+      }
     }
     const controller = new AbortController();
     uploadController.current = controller;
@@ -116,8 +155,14 @@ function DocumentsInner() {
     setUploadName(file.name);
     try {
       const uploaded = await documentsApi.upload(file, controller.signal);
+      let processingStarted: boolean;
       try {
-        await documentsApi.process(uploaded.id, controller.signal);
+        processingStarted = await processUploadedDocument(
+          capabilities.documentProcessing,
+          uploaded.id,
+          controller.signal,
+          documentsApi.process,
+        );
       } catch (reason) {
         if (isAbort(reason)) throw reason;
         setNotice(
@@ -125,6 +170,10 @@ function DocumentsInner() {
             ? t("documents.previewAdded")
             : t("documents.receivedProcessing"),
         );
+        return;
+      }
+      if (!processingStarted) {
+        setNotice(t("documents.processingUnavailable"));
         return;
       }
       setNotice(
@@ -146,6 +195,7 @@ function DocumentsInner() {
     setUploadError("");
     setNotice("");
     try {
+      if (!capabilities.documentProcessing) return;
       await documentsApi.retry(document.id);
       setNotice(t("documents.processingCopy"));
       refresh(true);
@@ -203,7 +253,7 @@ function DocumentsInner() {
                   ref={fileInput}
                   id="document-upload"
                   type="file"
-                  accept={data.usage.uploadLimits.allowedExtensions.join(",")}
+                  accept={data.usage?.uploadLimits.allowedExtensions.join(",")}
                   onChange={(event) => {
                     const file = event.target.files?.[0];
                     if (file) void upload(file);
@@ -238,13 +288,15 @@ function DocumentsInner() {
                     {t("documents.chooseFile")} <UploadCloud size={15} />
                   </Button>
                 )}
-                <p className="mt-4 text-[10px] leading-5 text-muted">
-                  {data.usage.uploadLimits.allowedExtensions
-                    .map((ext) => ext.replace(".", "").toUpperCase())
-                    .join(" · ")}{" "}
-                  · Up to {formatBytes(data.usage.uploadLimits.maxFileBytes)}{" "}
-                  per file · {t("documents.oneAtTime")}
-                </p>
+                {data.usage && (
+                  <p className="mt-4 text-[10px] leading-5 text-muted">
+                    {data.usage.uploadLimits.allowedExtensions
+                      .map((ext) => ext.replace(".", "").toUpperCase())
+                      .join(" · ")}{" "}
+                    · Up to {formatBytes(data.usage.uploadLimits.maxFileBytes)}{" "}
+                    per file · {t("documents.oneAtTime")}
+                  </p>
+                )}
               </div>
               {uploadError && <ErrorState message={uploadError} />}
               {notice && (
@@ -346,17 +398,18 @@ function DocumentsInner() {
                             {doc.canRetry
                               ? t("documents.retryHint")
                               : t("documents.deleteHint")}
-                            {doc.canRetry && (
-                              <Button
-                                variant="ghost"
-                                loading={retrying === doc.id}
-                                disabled={retrying !== null}
-                                onClick={() => void retryDocument(doc)}
-                                className="mt-2 min-h-8 px-0 py-1 text-danger hover:bg-transparent hover:underline"
-                              >
-                                {t("documents.retryProcessing")}
-                              </Button>
-                            )}
+                            {doc.canRetry &&
+                              capabilities.documentProcessing && (
+                                <Button
+                                  variant="ghost"
+                                  loading={retrying === doc.id}
+                                  disabled={retrying !== null}
+                                  onClick={() => void retryDocument(doc)}
+                                  className="mt-2 min-h-8 px-0 py-1 text-danger hover:bg-transparent hover:underline"
+                                >
+                                  {t("documents.retryProcessing")}
+                                </Button>
+                              )}
                           </div>
                         )}
                         {doc.status === "deleting" && doc.failureCode && (
@@ -389,7 +442,17 @@ function DocumentsInner() {
               </Card>
             </div>
             <div className="space-y-6">
-              <UsageCard usage={data.usage} />
+              {data.usage && capabilities.productControls && (
+                <UsageCard usage={data.usage} />
+              )}
+              {data.usageError && capabilities.productControls && (
+                <Card>
+                  <h2 className="mb-3 text-sm font-semibold">
+                    {t("usage.title")}
+                  </h2>
+                  <ErrorState message={data.usageError} retry={refresh} />
+                </Card>
+              )}
               <Card>
                 <h2 className="text-sm font-semibold">
                   {t("documents.afterUpload")}
@@ -401,18 +464,22 @@ function DocumentsInner() {
                       t("documents.received"),
                       t("documents.receivedCopy"),
                     ],
-                    [
-                      "02",
-                      t("documents.processing"),
-                      t("documents.processingCopy"),
-                    ],
-                    [
-                      "03",
-                      t("documents.ready"),
-                      isPreview
-                        ? t("documents.readyPreviewCopy")
-                        : t("documents.readyRealCopy"),
-                    ],
+                    ...(capabilities.documentProcessing
+                      ? [
+                          [
+                            "02",
+                            t("documents.processing"),
+                            t("documents.processingCopy"),
+                          ],
+                          [
+                            "03",
+                            t("documents.ready"),
+                            isPreview
+                              ? t("documents.readyPreviewCopy")
+                              : t("documents.readyRealCopy"),
+                          ],
+                        ]
+                      : []),
                   ].map(([number, title, copy]) => (
                     <li key={number} className="flex items-start gap-3">
                       <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-mint text-[10px] font-semibold text-brand">
@@ -427,6 +494,11 @@ function DocumentsInner() {
                     </li>
                   ))}
                 </ol>
+                {!capabilities.documentProcessing && (
+                  <p className="mt-5 border-t border-line pt-4 text-[11px] leading-6 text-muted">
+                    {t("documents.processingUnavailable")}
+                  </p>
+                )}
                 {isPreview && (
                   <p className="mt-5 border-t border-line pt-4 text-[11px] leading-6 text-amber">
                     {t("documents.previewStates")}

@@ -2,7 +2,7 @@ import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
   testDir: "./tests",
-  testIgnore: ["integration/**", "tooling/**"],
+  testIgnore: ["integration/**", "tooling/**", "staging-ui.spec.ts"],
   fullyParallel: true,
   timeout: 45000,
   expect: { timeout: 10000 },

@@ -2,6 +2,11 @@ import { expect, test } from "@playwright/test";
 import { createRealApi } from "@/lib/api/real";
 import { createApiClient } from "@/lib/api/client";
 import { createServer } from "node:http";
+import { loadDashboardData } from "@/lib/dashboard/load-dashboard";
+import { ApiClientError } from "@/lib/api/errors";
+import type { Conversation } from "@/types";
+import { loadSettingsUsage } from "@/lib/account/load-settings-usage";
+import { processUploadedDocument } from "@/lib/documents/process-upload";
 
 const unix = (value: number) => value;
 const conversation = (id: number) => ({
@@ -207,4 +212,128 @@ test("real adapter uses the raw upload contract and document lifecycle endpoints
     "x-document-display-name": "notes.txt",
   });
   expect(uploadCall.options.body).toBeInstanceOf(ArrayBuffer);
+});
+
+test("message-only real chat responses preserve the saved question without an assistant reply", async () => {
+  const api = createRealApi(async (path) => {
+    if (path === "/api/v1/conversations/1/messages")
+      return {
+        success: true,
+        data: { message: message(11, "user", "A saved staging question") },
+      };
+    throw new Error(`Unexpected transport path: ${path}`);
+  });
+  const events = await Array.fromAsync(
+    api.sendMessage("1", {
+      content: "A saved staging question",
+      documentIds: [],
+      requestId: "message-only",
+    }),
+  );
+  expect(events).toHaveLength(1);
+  expect(events[0]).toMatchObject({
+    type: "complete",
+    userMessage: { role: "user", content: "A saved staging question" },
+  });
+  if (events[0].type === "complete")
+    expect(events[0].assistantMessage).toBeUndefined();
+});
+
+test("dashboard loads identity and history without calling disabled optional endpoints", async () => {
+  const calls: string[] = [];
+  const user = { id: "u1", email: "student@example.test", name: "Student" };
+  const history = [
+    {
+      id: "c1",
+      title: "Saved question",
+      createdAt: "2026-10-10T00:00:00.000Z",
+      updatedAt: "2026-10-10T00:00:00.000Z",
+      documentIds: [],
+    },
+  ];
+  const data = await loadDashboardData(
+    new AbortController().signal,
+    { documents: false, productControls: false },
+    {
+      getUser: async () => {
+        calls.push("user");
+        return user;
+      },
+      listConversations: async () => {
+        calls.push("history");
+        return history;
+      },
+      listDocuments: async () => {
+        calls.push("documents");
+        return [];
+      },
+      getUsage: async () => {
+        calls.push("usage");
+        throw new Error("should not be called");
+      },
+    },
+  );
+  expect(calls).toEqual(["user", "history"]);
+  expect(data.user).toEqual(user);
+  expect(data.conversations).toEqual(history);
+  expect(data.documents).toBeNull();
+  expect(data.usage).toBeNull();
+});
+
+test("dashboard exposes optional endpoint failures without discarding required data", async () => {
+  const user = { id: "u1", email: "student@example.test", name: "Student" };
+  const history: Conversation[] = [];
+  const data = await loadDashboardData(
+    new AbortController().signal,
+    { documents: true, productControls: true },
+    {
+      getUser: async () => user,
+      listConversations: async () => history,
+      listDocuments: async () => {
+        throw new ApiClientError("UNAUTHENTICATED", "Session expired", 401);
+      },
+      getUsage: async () => {
+        throw new ApiClientError(
+          "SERVER_UNAVAILABLE",
+          "Server unavailable",
+          503,
+        );
+      },
+    },
+  );
+  expect(data.user).toEqual(user);
+  expect(data.conversations).toEqual(history);
+  expect(data.documents).toBeNull();
+  expect(data.documentsError).toBe("Session expired");
+  expect(data.usage).toBeNull();
+  expect(data.usageError).toBe("Server unavailable");
+});
+
+test("settings skips the usage request when product controls are disabled", async () => {
+  let calls = 0;
+  const usage = await loadSettingsUsage(
+    false,
+    new AbortController().signal,
+    async () => {
+      calls += 1;
+      throw new Error("usage endpoint must not be called");
+    },
+  );
+  expect(calls).toBe(0);
+  expect(usage).toBeNull();
+});
+
+test("disabled document processing skips processing while preserving upload", async () => {
+  let processCalls = 0;
+  const started = await processUploadedDocument(
+    false,
+    "uploaded-1",
+    new AbortController().signal,
+    async () => {
+      processCalls += 1;
+      throw new Error("processing endpoint must not be called");
+    },
+  );
+  expect(started).toBe(false);
+  expect(processCalls).toBe(0);
 });
