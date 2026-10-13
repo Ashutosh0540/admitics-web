@@ -10,16 +10,27 @@ export function BrandMark({ className }: { className?: string }) {
       aria-hidden="true"
       className={cn("size-9 shrink-0", className)}
     >
-      <rect width="40" height="40" rx="12" fill="currentColor" />
-      <path
-        d="M11 28 20 11l9 17M14.5 22h11"
-        fill="none"
-        stroke="#fafaf6"
-        strokeWidth="2.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+      <rect width="40" height="40" rx="11" fill="#225ae2" />
+      <text
+        x="19"
+        y="31"
+        textAnchor="middle"
+        fill="white"
+        fontFamily="DM Sans, sans-serif"
+        fontSize="31"
+        fontWeight="800"
+        letterSpacing="-2"
+      >
+        a
+      </text>
+      <circle
+        cx="32"
+        cy="7"
+        r="4.5"
+        fill="#ffb874"
+        stroke="white"
+        strokeWidth="2"
       />
-      <circle cx="29" cy="11" r="2.5" fill="#d2dba5" />
     </svg>
   );
 }
@@ -37,11 +48,13 @@ export function Logo({ light = false }: { light?: boolean }) {
       <BrandMark />
       <span
         className={cn(
-          "text-[23px] font-bold tracking-[-1px]",
+          "text-[25px] font-extrabold tracking-[-1.2px]",
           light ? "text-white" : "text-ink",
         )}
       >
-        admitics<span className="text-brand">.</span>
+        admit
+        <span className={light ? "text-white" : "text-brand"}>ics</span>
+        <span className={light ? "text-white/60" : "text-[#92a3b9]"}>.</span>
       </span>
     </Link>
   );

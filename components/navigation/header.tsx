@@ -1,46 +1,38 @@
 "use client";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { ArrowUpRight, Menu } from "lucide-react";
 import { Logo } from "./logo";
 import { AccountMenu } from "@/components/auth/account-menu";
 import { ButtonLink } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
-import { cn } from "@/lib/utils";
 import { LanguageSelector } from "./language-selector";
 import { useTranslation } from "@/lib/i18n";
 
 const links = [
-  ["explore", "/admissions"],
-  ["exams", "/exams"],
-  ["colleges", "/colleges"],
-  ["courses", "/courses"],
-  ["scholarships", "/scholarships"],
-  ["askAdmitics", "/chat"],
+  ["explorePaths", "/#explore"],
+  ["whatWeCover", "/#features"],
+  ["askAdmitics", "/#ask"],
+  ["opportunities", "/#opportunities"],
+  ["howItWorks", "/#how"],
 ];
 
 export function Header() {
-  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const t = useTranslation();
   return (
-    <header className="relative z-20 border-b border-line bg-paper">
-      <div className="container-page flex h-20 items-center justify-between gap-6">
+    <header className="sticky top-0 z-30 border-b border-line bg-white/95 backdrop-blur-xl">
+      <div className="container-page flex h-[78px] items-center justify-between gap-6">
         <Logo />
         <nav
           aria-label={t("nav.main")}
-          className="hidden items-center gap-5 xl:flex"
+          className="hidden items-center gap-4 xl:flex"
         >
           {links.map(([label, href]) => (
             <Link
               key={href}
               href={href}
-              aria-current={pathname === href ? "page" : undefined}
-              className={cn(
-                "py-3 text-[13px] font-medium transition-colors hover:text-brand",
-                pathname === href ? "text-brand" : "text-muted",
-              )}
+              className="py-3 text-[13px] font-semibold text-[#47566c] transition-colors hover:text-brand"
             >
               {t(`nav.${label}` as Parameters<typeof t>[0])}
             </Link>
@@ -50,17 +42,17 @@ export function Header() {
           <LanguageSelector />
           <AccountMenu />
           <ButtonLink
-            href="/signup"
-            className="min-h-10 rounded-lg px-4 py-2 text-xs"
+            href="/#ask"
+            className="min-h-11 rounded-xl px-4 py-2.5 text-xs"
           >
-            {t("nav.getStarted")} <ArrowUpRight size={15} />
+            {t("nav.askAdmitics")} <ArrowUpRight size={15} />
           </ButtonLink>
         </div>
         <button
           aria-label={t("nav.openNavigation")}
           aria-expanded={open}
           onClick={() => setOpen(true)}
-          className="flex size-11 items-center justify-center rounded-lg border border-line xl:hidden"
+          className="flex size-11 items-center justify-center rounded-xl border border-line xl:hidden"
         >
           <Menu size={21} />
         </button>
@@ -76,7 +68,7 @@ export function Header() {
               onClick={() => setOpen(false)}
               key={href}
               href={href}
-              className="rounded-lg px-3 py-3 text-sm hover:bg-mint"
+              className="rounded-xl px-3 py-3 text-sm hover:bg-mint"
             >
               {t(`nav.${label}` as Parameters<typeof t>[0])}
             </Link>
@@ -85,21 +77,21 @@ export function Header() {
           <Link
             onClick={() => setOpen(false)}
             href="/dashboard"
-            className="rounded-lg px-3 py-3 text-sm hover:bg-mint"
+            className="rounded-xl px-3 py-3 text-sm hover:bg-mint"
           >
             {t("nav.dashboard")}
           </Link>
           <Link
             onClick={() => setOpen(false)}
             href="/documents"
-            className="rounded-lg px-3 py-3 text-sm hover:bg-mint"
+            className="rounded-xl px-3 py-3 text-sm hover:bg-mint"
           >
             {t("nav.documents")}
           </Link>
           <Link
             onClick={() => setOpen(false)}
             href="/settings"
-            className="rounded-lg px-3 py-3 text-sm hover:bg-mint"
+            className="rounded-xl px-3 py-3 text-sm hover:bg-mint"
           >
             {t("nav.accountSettings")}
           </Link>
@@ -111,8 +103,8 @@ export function Header() {
           </div>
           <div className="flex items-center gap-3 px-3 py-2">
             <AccountMenu />
-            <ButtonLink href="/signup" onClick={() => setOpen(false)}>
-              {t("nav.getStarted")}
+            <ButtonLink href="/#ask" onClick={() => setOpen(false)}>
+              {t("nav.askAdmitics")}
             </ButtonLink>
           </div>
         </nav>

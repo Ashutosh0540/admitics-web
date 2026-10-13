@@ -1,12 +1,17 @@
-import { config } from "@/lib/config";
+import { config, safeNext } from "@/lib/config";
 import type { User } from "@/types";
 
 export interface AuthAdapter {
   getSession(): Promise<User | null>;
   getAccessToken(): Promise<string | null>;
   signIn(email: string, password: string): Promise<User>;
-  signUp(name: string, email: string, password: string): Promise<User | null>;
-  signInWithGoogle(): Promise<void>;
+  signUp(
+    name: string,
+    email: string,
+    password: string,
+    returnTo?: string,
+  ): Promise<User | null>;
+  signInWithGoogle(returnTo?: string): Promise<void>;
   completeAuthCallback(code: string): Promise<User>;
   signOut(): Promise<void>;
   resetPassword(email: string): Promise<void>;
@@ -178,7 +183,7 @@ const supabaseAuth: AuthAdapter = {
     if (error) authError(error, "Sign-in could not be completed. Please try again.");
     return identity(data.user);
   },
-  async signUp(name, email, password) {
+  async signUp(name, email, password, returnTo = "/dashboard") {
     const { data, error } = await (
       await supabase()
     ).auth.signUp({
@@ -186,18 +191,24 @@ const supabaseAuth: AuthAdapter = {
       password,
       options: {
         data: { name },
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(
+          safeNext(returnTo),
+        )}`,
       },
     });
     if (error) authError(error, "Sign-up could not be completed. Please try again.");
     return data.session && data.user ? identity(data.user) : null;
   },
-  async signInWithGoogle() {
+  async signInWithGoogle(returnTo = "/dashboard") {
     const { error } = await (
       await supabase()
     ).auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: `${window.location.origin}/auth/callback` },
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(
+          safeNext(returnTo),
+        )}`,
+      },
     });
     if (error) authError(error, "Google sign-in could not be started. Please try again.");
   },

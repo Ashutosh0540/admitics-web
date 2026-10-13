@@ -37,7 +37,7 @@ export function Composer({
   }
   return (
     <form onSubmit={submit} className="mx-auto w-full max-w-3xl">
-      <div className="rounded-2xl border border-brand/20 bg-white p-3 shadow-[0_3px_14px_-8px_#1f554435]">
+      <div className="rounded-2xl border border-brand/20 bg-white p-3 shadow-[0_3px_14px_-8px_rgba(34,90,226,.22)]">
         {documents.length > 0 && (
           <div className="mb-2 flex flex-wrap gap-2">
             {documents.map((doc) => (

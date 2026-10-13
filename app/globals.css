@@ -2,28 +2,32 @@
 
 @theme inline {
   --font-sans: "DM Sans Variable", "DM Sans", system-ui, sans-serif;
-  --font-serif: Georgia, "Times New Roman", serif;
-  --color-ink: #192c28;
-  --color-muted: #586861;
-  --color-brand: #1f5544;
-  --color-brand-dark: #163d31;
-  --color-mint: #e8f1e9;
-  --color-paper: #fafaf6;
-  --color-line: #e0e6df;
-  --color-peach: #f4e5d6;
+  --font-display: "DM Sans Variable", "DM Sans", system-ui, sans-serif;
+  --color-ink: #11223c;
+  --color-muted: #647189;
+  --color-brand: #225ae2;
+  --color-brand-dark: #1644ad;
+  --color-mint: #eaf1ff;
+  --color-paper: #ffffff;
+  --color-line: #e4eaf1;
+  --color-peach: #fff0e4;
   --color-amber: #8b5616;
   --color-danger: #a52b37;
 }
 
 :root {
   color-scheme: light;
+  --color-deep: #091d39;
+  --color-soft: #f7f9fc;
+  --color-orange: #ffb874;
+  --shadow-card: 0 16px 54px rgba(16, 47, 96, 0.09);
 }
 * {
   box-sizing: border-box;
 }
 body {
   margin: 0;
-  background: var(--color-paper);
+  background: #fff;
   color: var(--color-ink);
   font-family: var(--font-sans);
 }
@@ -42,11 +46,11 @@ button:disabled {
   cursor: not-allowed;
 }
 ::selection {
-  background: #d2e6d5;
-  color: #163d31;
+  background: #dce8ff;
+  color: #11223c;
 }
 :focus-visible {
-  outline: 3px solid #39836b;
+  outline: 3px solid #82aeff;
   outline-offset: 4px;
 }
 input:focus-visible,
@@ -61,6 +65,19 @@ html {
   width: min(100% - 3rem, 1200px);
   margin-inline: auto;
 }
+section[id] {
+  scroll-margin-top: 6.5rem;
+}
+.reference-hero {
+  overflow: hidden;
+  background:
+    radial-gradient(
+      circle at 83% 12%,
+      rgba(231, 243, 255, 0.95),
+      transparent 34%
+    ),
+    linear-gradient(180deg, #f7faff 0%, #fff 100%);
+}
 .eyebrow {
   font-size: 0.7rem;
   font-weight: 700;
@@ -69,10 +86,10 @@ html {
   color: var(--color-brand);
 }
 .editorial {
-  font-family: var(--font-serif);
-  font-weight: 400;
-  letter-spacing: -0.055em;
-  line-height: 1.06;
+  font-family: var(--font-display);
+  font-weight: 750;
+  letter-spacing: -0.045em;
+  line-height: 1.08;
 }
 .skip-link {
   position: fixed;
@@ -90,8 +107,8 @@ html {
 }
 .subtle-grid {
   background-image:
-    linear-gradient(#d7e3d777 1px, transparent 1px),
-    linear-gradient(90deg, #d7e3d777 1px, transparent 1px);
+    linear-gradient(#dce7f577 1px, transparent 1px),
+    linear-gradient(90deg, #dce7f577 1px, transparent 1px);
   background-size: 40px 40px;
 }
 .markdown {
@@ -129,20 +146,20 @@ html {
 }
 .markdown pre {
   overflow-x: auto;
-  background: #edf1eb;
+  background: #f2f6fc;
   border: 1px solid var(--color-line);
   border-radius: 0.75rem;
   padding: 1rem;
   font-size: 0.8rem;
 }
 .markdown code:not(pre code) {
-  background: #edf1eb;
+  background: #f2f6fc;
   border-radius: 0.25rem;
   padding: 0.1rem 0.3rem;
   font-size: 0.85em;
 }
 .markdown blockquote {
-  border-left: 3px solid #b2c9b8;
+  border-left: 3px solid #adc6f5;
   padding-left: 1rem;
   color: var(--color-muted);
 }
@@ -164,7 +181,7 @@ dialog {
   border: 0;
 }
 dialog::backdrop {
-  background: #102b2366;
+  background: #091d3966;
 }
 @keyframes rise {
   from {

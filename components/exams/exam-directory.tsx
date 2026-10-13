@@ -155,7 +155,7 @@ export function ExamDirectory({ exams }: { exams: Exam[] }) {
           )}
         </section>
       </div>
-      <section className="border-y border-line bg-[#f0f3ec] py-14 sm:py-16">
+      <section className="border-y border-line bg-[#f2f6fc] py-14 sm:py-16">
         <div className="container-page flex flex-col justify-between gap-6 md:flex-row md:items-center">
           <div className="flex gap-4">
             <Sparkles

@@ -41,8 +41,10 @@ import { LanguageSelector } from "@/components/navigation/language-selector";
 
 export function ChatWorkspace() {
   const { user } = useAuth();
+  const params = useSearchParams();
+  const search = params.toString();
   return (
-    <AccountGate>
+    <AccountGate returnTo={`/chat${search ? `?${search}` : ""}`}>
       <ChatInner key={user?.id ?? "guest"} />
     </AccountGate>
   );
@@ -57,6 +59,8 @@ function ChatInner() {
   const [initial] = useState(() => ({
     id: params.get("id"),
     doc: params.get("document"),
+    question: params.get("q")?.slice(0, 8000) ?? "",
+    handoff: params.get("handoff"),
   }));
   const [activeId, setActiveId] = useState<string | null>(initial.id);
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -87,6 +91,7 @@ function ChatInner() {
   const sendController = useRef<AbortController | null>(null);
   const loadController = useRef<AbortController | null>(null);
   const busy = useRef(false);
+  const handoffHandled = useRef(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const followScroll = useRef(true);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -360,6 +365,36 @@ function ChatInner() {
       }
     }
   }
+  useEffect(() => {
+    if (
+      !initial.handoff ||
+      !initial.question.trim() ||
+      handoffHandled.current ||
+      messageLoading ||
+      busy.current
+    )
+      return;
+
+    handoffHandled.current = true;
+    const storageKey = `admitics:chat-handoff:${initial.handoff}`;
+    try {
+      if (window.sessionStorage.getItem(storageKey)) {
+        updateUrl(null);
+        return;
+      }
+      window.sessionStorage.setItem(storageKey, "submitted");
+    } catch {
+      // The in-memory ref still prevents duplicate effect submissions.
+    }
+    updateUrl(null);
+    window.setTimeout(
+      () =>
+        document
+          .querySelector<HTMLTextAreaElement>("#chat-question")
+          ?.form?.requestSubmit(),
+      0,
+    );
+  }, [initial, messageLoading, updateUrl]);
   function stop() {
     sendController.current?.abort();
     setMessages((current) =>
@@ -409,7 +444,7 @@ function ChatInner() {
     <div className="flex h-dvh overflow-hidden bg-paper">
       <aside
         aria-label={t("chat.history")}
-        className="hidden w-[275px] shrink-0 border-r border-line bg-[#f0f3ec] p-5 lg:block"
+        className="hidden w-[275px] shrink-0 border-r border-line bg-[#f2f6fc] p-5 lg:block"
       >
         {sidebar}
       </aside>
@@ -451,14 +486,14 @@ function ChatInner() {
           </div>
         </header>
         {isPreview && capabilities.ai && (
-          <div className="shrink-0 border-b border-line bg-[#f4f1e6] px-4 py-2 text-center text-[10px] leading-5 text-muted">
+          <div className="shrink-0 border-b border-line bg-[#f0f6ff] px-4 py-2 text-center text-[10px] leading-5 text-muted">
             {t("chat.previewNotice")}
           </div>
         )}
         {!capabilities.ai && (
           <p
             role="note"
-            className="shrink-0 border-b border-line bg-[#f4f1e6] px-4 py-2 text-center text-[11px] leading-5 text-muted"
+            className="shrink-0 border-b border-line bg-[#f0f6ff] px-4 py-2 text-center text-[11px] leading-5 text-muted"
           >
             {t("chat.aiDisabledNotice")}
           </p>

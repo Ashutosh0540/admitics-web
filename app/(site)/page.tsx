@@ -2,8 +2,8 @@ import { HomeView } from "@/components/landing/home-view";
 import { pageMetadata } from "@/lib/metadata";
 
 export const metadata = pageMetadata(
-  "Your next chapter, with clarity",
-  "Make smarter decisions about your education. Explore exams, colleges, courses and scholarships with Admitics, your AI admissions advisor.",
+  "Every education opportunity starts with a question",
+  "Ask an education question and explore pathways, admissions, scholarships and next steps with Admitics.",
   "/",
 );
 

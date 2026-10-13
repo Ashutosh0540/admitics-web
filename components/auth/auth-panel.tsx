@@ -105,12 +105,14 @@ export function AuthPanel({ mode }: { mode: AuthMode }) {
                     await auth.updatePassword(password);
                     setSuccess(t("auth.successReset"));
                   } else if (mode === "signup") {
+                    const next = safeNext(params.get("next"));
                     const user = await auth.signUp(
                       name.trim(),
                       email,
                       password,
+                      next,
                     );
-                    if (user) router.replace(safeNext(params.get("next")));
+                    if (user) router.replace(next);
                     else setSuccess(t("auth.successSignup"));
                   } else {
                     await auth.signIn(email, password);
@@ -273,7 +275,9 @@ export function AuthPanel({ mode }: { mode: AuthMode }) {
                     setBusy(true);
                     setError("");
                     try {
-                      await getAuth().signInWithGoogle();
+                      await getAuth().signInWithGoogle(
+                        safeNext(params.get("next")),
+                      );
                     } catch (reason) {
                       setError(localizedErrorMessage(reason, locale));
                     } finally {

@@ -9,11 +9,11 @@ import "./globals.css";
 export const metadata: Metadata = {
   metadataBase: new URL(config.siteUrl),
   title: {
-    default: "Admitics — Your next chapter, with clarity",
+    default: "Admitics — Every education opportunity starts with a question",
     template: "%s | Admitics",
   },
   description:
-    "Navigate admissions, exams, colleges, courses and scholarships with a thoughtful AI education advisor.",
+    "Explore education pathways, admissions, scholarships and practical next steps with Admitics.",
   openGraph: { siteName: "Admitics", type: "website", locale: "en_IN" },
   twitter: { card: "summary_large_image" },
   icons: { icon: "/icon.svg" },

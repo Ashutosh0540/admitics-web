@@ -12,8 +12,8 @@ export default function GlobalError({
           margin: 0,
           padding: "4rem 2rem",
           fontFamily: "system-ui",
-          color: "#192c28",
-          background: "#fafaf6",
+          color: "#11223c",
+          background: "#f7faff",
         }}
       >
         <main>

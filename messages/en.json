@@ -51,7 +51,11 @@
     "logIn": "Log in",
     "logOut": "Log out",
     "restoringAccount": "Restoring account",
-    "closeDialog": "Close dialog"
+    "closeDialog": "Close dialog",
+    "explorePaths": "Explore paths",
+    "whatWeCover": "What we cover",
+    "opportunities": "Find opportunities",
+    "howItWorks": "How it works"
   },
   "footer": {
     "tagline": "A little clarity for a big decision.",
@@ -64,14 +68,15 @@
     "terms": "Terms",
     "disclaimer": "Disclaimer",
     "copyright": "Made for your next chapter.",
-    "guidance": "Guidance, not guarantees. Always confirm with official sources."
+    "guidance": "Guidance, not guarantees. Always confirm with official sources.",
+    "trustTitle": "Guidance you can trust"
   },
   "home": {
-    "badge": "YOUR FUTURE. A LITTLE CLEARER.",
-    "title1": "Big dreams.",
-    "title2": "Better decisions.",
-    "title3": "Your next chapter.",
-    "intro": "From “what’s next?” to a plan you believe in. Navigate admissions, exams, colleges, courses, scholarships, and deadlines with Admitics.",
+    "badge": "INDIA FIRST. OPPORTUNITIES FOR EVERY LEARNER.",
+    "title1": "Your future has",
+    "title2": "more possibilities.",
+    "title3": "Find yours.",
+    "intro": "From choosing a school to studying abroad, ask an education question and explore pathways, scholarships and practical next steps in your language.",
     "ask": "Ask Admitics",
     "exploreAdmissions": "Explore admissions",
     "audience": "For students, parents, and every possibility ahead.",
@@ -89,11 +94,11 @@
     "startConversation": "Start a conversation",
     "questionIntro": "Every good plan starts somewhere.",
     "questionCopy": "Here are a few questions to get you going.",
-    "question1": "Which exams can I take after Class 12?",
-    "question2": "Am I eligible for this course?",
-    "question3": "Which colleges offer this program?",
-    "question4": "What scholarships can I apply for?",
-    "question5": "What documents do I need?",
+    "question1": "I finished Class 10. What education pathways could I consider?",
+    "question2": "I finished Class 12 with BiPC. What can I study besides MBBS?",
+    "question3": "How does NEET counselling work in Andhra Pradesh?",
+    "question4": "Which scholarships could I qualify for in India?",
+    "question5": "How do I apply to study abroad?",
     "questionsWelcome": "Big questions welcome. Small ones, too.",
     "directionEyebrow": "FIND YOUR DIRECTION",
     "directionTitle": "More options. Less overwhelm.",
@@ -132,7 +137,60 @@
         "copy": "Discover support for your ambitions.",
         "detail": "Opportunities · Criteria · Applications"
       }
-    }
+    },
+    "dashboardHeading": "What would you like to know?",
+    "dashboardEyebrow": "ASK ADMITICS",
+    "dashboardPlaceholder": "Type your education question…",
+    "dashboardButton": "Explore my question",
+    "dashboardNote": "Start with a question. Important eligibility details should always be checked with the official authority.",
+    "suggestion1": "After Class 10",
+    "suggestion2": "After Class 12",
+    "suggestion3": "NEET & MBBS",
+    "suggestion4": "Scholarships",
+    "suggestion5": "Study abroad",
+    "trust1": "Explore without an account",
+    "trust2": "Official-source focused",
+    "trust3": "Built for Indian learners",
+    "pathwayEyebrow": "START WHERE YOU ARE",
+    "pathwayTitle": "One place for every step of your education journey.",
+    "pathwayCopy": "Explore a direction, understand what to verify, and take a thoughtful next step.",
+    "pathways": {
+      "school": {
+        "title": "Find my school",
+        "copy": "Explore school choices, college profiles and the routes between them."
+      },
+      "after10": {
+        "title": "After Class 10",
+        "copy": "Understand streams, diplomas and course directions to explore."
+      },
+      "after12": {
+        "title": "After Class 12",
+        "copy": "Explore degrees and entrance exams that align with your subject choices."
+      },
+      "medical": {
+        "title": "Medical & NEET",
+        "copy": "Find admissions guidance, counselling links and related exams."
+      },
+      "engineering": {
+        "title": "Engineering & AI",
+        "copy": "Review engineering exams, courses and useful next questions."
+      },
+      "abroad": {
+        "title": "Study abroad",
+        "copy": "Start with recognition, eligibility, costs and official guidance."
+      },
+      "funding": {
+        "title": "Scholarships & loans",
+        "copy": "Explore support options and verify criteria with each provider."
+      },
+      "careers": {
+        "title": "Skills & careers",
+        "copy": "Connect courses, skills and career interests with a next step."
+      }
+    },
+    "openingChat": "Opening your chat…",
+    "chatPreviewTitle": "Ask naturally. Explore your options clearly.",
+    "chatPreviewCopy": "Your question opens the existing Admitics chat. Responses depend on backend availability and enabled features; verify important facts with official sources."
   },
   "journey": {
     "title": "Your next chapter",

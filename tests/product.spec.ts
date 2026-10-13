@@ -57,7 +57,7 @@ test("landing, metadata and keyboard-accessible navigation", async ({
 }, info) => {
   await page.goto("/");
   await expect(page.getByRole("heading", { level: 1 })).toContainText(
-    "Your next chapter",
+    "Your future has",
   );
   await expect(page).toHaveTitle(/Admitics/);
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
@@ -73,7 +73,7 @@ test("landing, metadata and keyboard-accessible navigation", async ({
     .getByRole("link", { name: "Ask Admitics", exact: true });
   await finalCta.scrollIntoViewIfNeeded();
   expect(await finalCta.evaluate((el) => getComputedStyle(el).color)).toBe(
-    "rgb(31, 85, 68)",
+    "rgb(34, 90, 226)",
   );
   await a11y(page);
   await page.screenshot({
@@ -92,17 +92,57 @@ test("landing, metadata and keyboard-accessible navigation", async ({
     await trigger.click();
     await page
       .getByRole("navigation", { name: "Mobile navigation" })
-      .getByRole("link", { name: "Exams", exact: true })
+      .getByRole("link", { name: "Explore paths", exact: true })
       .click();
   } else
     await page
       .getByRole("navigation", { name: "Main navigation" })
-      .getByRole("link", { name: "Exams", exact: true })
+      .getByRole("link", { name: "Explore paths", exact: true })
       .click();
-  await expect(page).toHaveURL(/\/exams$/);
+  await expect(page).toHaveURL(/\/#explore$/);
+  await page.goto("/exams");
   await expect(page.getByRole("heading", { level: 1 })).toContainText(
     "right exam",
   );
+});
+
+test("homepage question chips populate the dashboard and submit once to chat", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const input = page.getByRole("textbox", {
+    name: "What would you like to know?",
+  });
+  await page
+    .getByRole("button", { name: "After Class 12", exact: true })
+    .click();
+  await expect(input).toHaveValue(/Class 12/);
+
+  const question =
+    "I finished Class 12 with BiPC. What can I study besides MBBS?";
+  await input.fill(question);
+  await page.getByRole("button", { name: "Explore my question" }).click();
+  const savedQuestion = page.getByRole("article", { name: "Your question" });
+  await expect(savedQuestion).toHaveCount(1);
+  await expect(savedQuestion).toContainText(question);
+  await expect(
+    page.getByRole("button", { name: "Copy response", exact: true }),
+  ).toBeVisible();
+  await page.reload();
+  await expect(
+    page.getByRole("article", { name: "Your question" }),
+  ).toHaveCount(1);
+});
+
+test("opportunity topic selector submits its prompt to chat", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.locator("#opportunity-topic").selectOption("abroad");
+  await page.getByRole("button", { name: "Plan your next steps" }).click();
+  const savedQuestion = page.getByRole("article", { name: "Your question" });
+  await expect(savedQuestion).toHaveCount(1);
+  await expect(savedQuestion).toContainText("study abroad");
 });
 
 test("public routes and footer links resolve", async ({ page, request }) => {
@@ -551,7 +591,7 @@ test("language selector switches the interface and persists across refresh", asy
   };
   await selectLanguage("हिन्दी");
   await expect(page.getByRole("heading", { level: 1 })).toContainText(
-    "आपका अगला अध्याय",
+    "अपनी राह खोजें",
   );
   await page.reload();
   if (info.project.name === "mobile") {
@@ -559,16 +599,16 @@ test("language selector switches the interface and persists across refresh", asy
   }
   await expect(
     info.project.name === "mobile"
-      ? page.getByRole("dialog").getByRole("link", { name: "खोजें" })
+      ? page.getByRole("dialog").getByRole("link", { name: "रास्ते देखें" })
       : page
           .getByRole("navigation", { name: "मुख्य नेविगेशन" })
-          .getByRole("link", { name: "खोजें" }),
+          .getByRole("link", { name: "रास्ते देखें" }),
   ).toBeVisible();
 
   for (const [language, heading] of [
-    ["తెలుగు", "మీ తదుపరి అధ్యాయం"],
-    ["தமிழ்", "உங்கள் அடுத்த அத்தியாயம்"],
-    ["English", "Your next chapter"],
+    ["తెలుగు", "మీ మార్గాన్ని కనుగొనండి"],
+    ["தமிழ்", "உங்கள் பாதையைக் கண்டறியுங்கள்"],
+    ["English", "Find yours"],
   ]) {
     await selectLanguage(language);
     await expect(page.getByRole("heading", { level: 1 })).toContainText(
@@ -577,16 +617,24 @@ test("language selector switches the interface and persists across refresh", asy
   }
 });
 
-test("changing language during a chat request preserves its conversation and URL", async ({ page }) => {
+test("changing language during a chat request preserves its conversation and URL", async ({
+  page,
+}) => {
   await page.goto("/chat");
-  const composer = page.getByRole("textbox", { name: "Your question for Admitics" });
+  const composer = page.getByRole("textbox", {
+    name: "Your question for Admitics",
+  });
   await composer.fill("Help me choose a next step while I change languages.");
   await page.getByRole("button", { name: "Send question" }).click();
   await page.getByRole("button", { name: "Choose language" }).click();
   await page.getByRole("menuitemradio", { name: "हिन्दी" }).click();
   await expect(page).toHaveURL(/\/chat\?id=/);
   const conversationUrl = page.url();
-  await expect(page.getByRole("article", { name: "Admitics का जवाब" })).toBeVisible({ timeout: 15000 });
+  await expect(
+    page.getByRole("article", { name: "Admitics का जवाब" }),
+  ).toBeVisible({ timeout: 15000 });
   await expect(page).toHaveURL(conversationUrl);
-  await expect(page.locator("article").filter({ hasText: "Help me choose a next step" })).toBeVisible();
+  await expect(
+    page.locator("article").filter({ hasText: "Help me choose a next step" }),
+  ).toBeVisible();
 });

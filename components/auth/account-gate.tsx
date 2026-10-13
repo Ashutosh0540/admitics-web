@@ -11,7 +11,13 @@ import {
 } from "@/components/ui/primitives";
 import { useTranslation } from "@/lib/i18n";
 
-export function AccountGate({ children }: { children: ReactNode }) {
+export function AccountGate({
+  children,
+  returnTo,
+}: {
+  children: ReactNode;
+  returnTo?: string;
+}) {
   const { user, loading, error } = useAuth();
   const pathname = usePathname();
   const t = useTranslation();
@@ -34,7 +40,9 @@ export function AccountGate({ children }: { children: ReactNode }) {
           title={t("dashboard.waiting")}
           description={t("dashboard.waitingCopy")}
           action={
-            <ButtonLink href={`/login?next=${encodeURIComponent(pathname)}`}>
+            <ButtonLink
+              href={`/login?next=${encodeURIComponent(returnTo ?? pathname)}`}
+            >
               {t("nav.logIn")}
             </ButtonLink>
           }
