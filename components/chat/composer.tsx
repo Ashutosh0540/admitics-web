@@ -63,31 +63,57 @@ export function Composer({
         <label htmlFor="chat-question" className="sr-only">
           {t("chat.questionLabel")}
         </label>
-        <textarea
-          ref={ref}
-          id="chat-question"
-          value={value}
-          disabled={disabled}
-          onChange={(event) => {
-            onChange(event.target.value);
-            event.target.style.height = "auto";
-            event.target.style.height = `${Math.min(event.target.scrollHeight, 160)}px`;
-          }}
-          onKeyDown={(event) => {
-            if (
-              event.key === "Enter" &&
-              !event.shiftKey &&
-              !event.nativeEvent.isComposing
-            ) {
-              event.preventDefault();
-              if (value.trim() && !sending) onSend();
-            }
-          }}
-          placeholder={t("chat.composerPlaceholder")}
-          rows={2}
-          maxLength={8000}
-          className="block max-h-40 min-h-14 w-full resize-none rounded-lg px-2 py-2 text-sm leading-6 placeholder:text-muted/70"
-        />
+        <div className="relative">
+          <textarea
+            ref={ref}
+            id="chat-question"
+            value={value}
+            disabled={disabled}
+            onChange={(event) => {
+              onChange(event.target.value);
+              event.target.style.height = "auto";
+              event.target.style.height = `${Math.min(event.target.scrollHeight, 160)}px`;
+            }}
+            onKeyDown={(event) => {
+              if (
+                event.key === "Enter" &&
+                !event.shiftKey &&
+                !event.nativeEvent.isComposing
+              ) {
+                event.preventDefault();
+                if (value.trim() && !sending) onSend();
+              }
+            }}
+            placeholder={t("chat.composerPlaceholder")}
+            rows={2}
+            maxLength={8000}
+            className="block max-h-40 min-h-24 w-full resize-none rounded-lg px-2 pt-2 pr-14 pb-14 text-sm leading-6 placeholder:text-muted/70"
+          />
+          {sending ? (
+            <button
+              key="stop"
+              type="button"
+              disabled={false}
+              onClick={onStop}
+              aria-label={
+                aiEnabled ? t("chat.stopResponse") : t("chat.stopSaving")
+              }
+              className="absolute right-2 bottom-2 flex size-11 items-center justify-center rounded-xl bg-brand text-white"
+            >
+              <Square size={15} fill="currentColor" />
+            </button>
+          ) : (
+            <button
+              key="send"
+              type="submit"
+              disabled={disabled || !value.trim()}
+              aria-label={t("chat.sendQuestion")}
+              className="absolute right-2 bottom-2 flex size-11 items-center justify-center rounded-xl bg-brand text-white hover:bg-brand-dark disabled:opacity-40"
+            >
+              <ArrowUp size={20} />
+            </button>
+          )}
+        </div>
         <div className="mt-1 flex items-center justify-between gap-3">
           {documentsEnabled && (
             <button
@@ -100,35 +126,9 @@ export function Composer({
               <span>{t("chat.addContext")}</span>
             </button>
           )}
-          <div className="flex items-center gap-3">
-            <span className="hidden text-[10px] text-muted sm:block">
-              {t("chat.newLineHint")}
-            </span>
-            {sending ? (
-              <button
-                key="stop"
-                type="button"
-                disabled={false}
-                onClick={onStop}
-                aria-label={
-                  aiEnabled ? t("chat.stopResponse") : t("chat.stopSaving")
-                }
-                className="flex size-11 items-center justify-center rounded-xl bg-brand text-white"
-              >
-                <Square size={15} fill="currentColor" />
-              </button>
-            ) : (
-              <button
-                key="send"
-                type="submit"
-                disabled={disabled || !value.trim()}
-                aria-label={t("chat.sendQuestion")}
-                className="flex size-11 items-center justify-center rounded-xl bg-brand text-white hover:bg-brand-dark disabled:opacity-40"
-              >
-                <ArrowUp size={20} />
-              </button>
-            )}
-          </div>
+          <span className="ml-auto hidden text-[10px] text-muted sm:block">
+            {t("chat.newLineHint")}
+          </span>
         </div>
       </div>
       <p className="mt-2.5 px-2 text-center text-[10px] leading-5 text-muted">

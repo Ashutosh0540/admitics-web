@@ -231,6 +231,60 @@ test("chat streams, persists, presents honest sources and supports history actio
   );
 });
 
+test("composer send button stays inside the input and preserves keyboard behavior", async ({
+  page,
+}) => {
+  await page.goto("/chat");
+  const composer = page.getByRole("textbox", {
+    name: "Your question for Admitics",
+  });
+  const send = page.getByRole("button", { name: "Send question" });
+
+  await expect(send).toBeDisabled();
+  await composer.fill("First line");
+  await composer.press("Shift+Enter");
+  await composer.type("Second line");
+  await expect(composer).toHaveValue("First line\nSecond line");
+  await expect(
+    page.getByRole("article", { name: "Your question" }),
+  ).toHaveCount(0);
+
+  const inputBounds = await composer.boundingBox();
+  const buttonBounds = await send.boundingBox();
+  expect(inputBounds).not.toBeNull();
+  expect(buttonBounds).not.toBeNull();
+  expect(buttonBounds!.x + buttonBounds!.width).toBeLessThan(
+    inputBounds!.x + inputBounds!.width,
+  );
+  expect(buttonBounds!.x + buttonBounds!.width / 2).toBeGreaterThan(
+    inputBounds!.x + inputBounds!.width / 2,
+  );
+  expect(buttonBounds!.y + buttonBounds!.height).toBeLessThan(
+    inputBounds!.y + inputBounds!.height,
+  );
+  expect(buttonBounds!.y + buttonBounds!.height / 2).toBeGreaterThan(
+    inputBounds!.y + inputBounds!.height / 2,
+  );
+  const reservedSpace = await composer.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return {
+      right: Number.parseFloat(style.paddingRight),
+      bottom: Number.parseFloat(style.paddingBottom),
+    };
+  });
+  expect(reservedSpace.right).toBeGreaterThanOrEqual(buttonBounds!.width);
+  expect(reservedSpace.bottom).toBeGreaterThanOrEqual(buttonBounds!.height);
+
+  await page.keyboard.press("Tab");
+  await expect(send).toBeFocused();
+  await expect(send).toHaveCSS("outline-style", "solid");
+  await composer.focus();
+  await composer.press("Enter");
+  await expect(
+    page.getByRole("article", { name: "Your question" }),
+  ).toContainText("First line\nSecond line");
+});
+
 test("failed chat retries without duplicating the saved question", async ({
   page,
 }) => {
