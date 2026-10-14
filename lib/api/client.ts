@@ -145,31 +145,37 @@ export function createApiClient({
       });
       if (!response.ok) {
         let payload: unknown;
-        if (response.headers.get("content-type")?.includes("application/json")) {
+        if (
+          response.headers.get("content-type")?.includes("application/json")
+        ) {
           try {
             payload = await response.json();
           } catch {
             payload = undefined;
           }
         }
-        const error = record(payload) && record(payload.error)
-          ? payload.error
-          : undefined;
-        const code = typeof error?.code === "string"
-          ? error.code
-          : statusCode(response.status);
-        const details = record(payload) && record(payload.data) &&
+        const error =
+          record(payload) && record(payload.error) ? payload.error : undefined;
+        const code =
+          typeof error?.code === "string"
+            ? error.code
+            : statusCode(response.status);
+        const details =
+          record(payload) &&
+          record(payload.data) &&
           typeof payload.data.userMessageId === "number" &&
           Number.isSafeInteger(payload.data.userMessageId) &&
           payload.data.userMessageId > 0
-          ? { userMessageId: payload.data.userMessageId }
-          : undefined;
+            ? { userMessageId: payload.data.userMessageId }
+            : undefined;
         throw new ApiClientError(
           code,
           publicMessage(code, response.status),
           response.status,
           response.headers.get("x-request-id") ??
-            (typeof error?.requestId === "string" ? error.requestId : undefined),
+            (typeof error?.requestId === "string"
+              ? error.requestId
+              : undefined),
           details,
         );
       }

@@ -25,14 +25,20 @@ test("HTTP client sanitizes errors, preserves correlation, times out and cancels
       "Content-Type": "application/json",
       "X-Request-ID": "safe-correlation",
     });
-    response.end(JSON.stringify({
-      success: false,
-      error: { code: "UNKNOWN_PRIVATE_ERROR", message: "SQL provider stack trace SECRET" },
-    }));
+    response.end(
+      JSON.stringify({
+        success: false,
+        error: {
+          code: "UNKNOWN_PRIVATE_ERROR",
+          message: "SQL provider stack trace SECRET",
+        },
+      }),
+    );
   });
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
   const address = server.address();
-  if (!address || typeof address === "string") throw new Error("Missing local fixture address");
+  if (!address || typeof address === "string")
+    throw new Error("Missing local fixture address");
   const client = createApiClient({
     baseUrl: `http://127.0.0.1:${address.port}`,
     accessToken: async () => "fixture-only-token",
@@ -46,7 +52,9 @@ test("HTTP client sanitizes errors, preserves correlation, times out and cancels
         throw new Error("Expected an HTTP error");
       } catch (error) {
         expect(error).toMatchObject({ status, requestId: "safe-correlation" });
-        expect((error as Error).message).not.toMatch(/SQL|provider|stack|SECRET/);
+        expect((error as Error).message).not.toMatch(
+          /SQL|provider|stack|SECRET/,
+        );
       }
     }
     await expect(client("/slow")).rejects.toMatchObject({ code: "TIMEOUT" });
@@ -54,9 +62,13 @@ test("HTTP client sanitizes errors, preserves correlation, times out and cancels
     const pending = client("/slow", { signal: controller.signal });
     controller.abort();
     await expect(pending).rejects.toMatchObject({ name: "AbortError" });
-    await expect(createApiClient({
-      baseUrl: "http://127.0.0.1:1", accessToken: async () => "fixture-only-token", allowLocalHttp: true,
-    })("/offline")).rejects.toMatchObject({ code: "NETWORK_ERROR" });
+    await expect(
+      createApiClient({
+        baseUrl: "http://127.0.0.1:1",
+        accessToken: async () => "fixture-only-token",
+        allowLocalHttp: true,
+      })("/offline"),
+    ).rejects.toMatchObject({ code: "NETWORK_ERROR" });
   } finally {
     server.closeAllConnections();
     await new Promise<void>((resolve) => server.close(() => resolve()));
@@ -64,10 +76,29 @@ test("HTTP client sanitizes errors, preserves correlation, times out and cancels
 });
 
 test("real mapping handles every backend document lifecycle and permanent parse failures", async () => {
-  for (const status of ["UPLOADING", "UPLOADED", "PROCESSING", "READY", "FAILED", "DELETING", "DELETED"]) {
+  for (const status of [
+    "UPLOADING",
+    "UPLOADED",
+    "PROCESSING",
+    "READY",
+    "FAILED",
+    "DELETING",
+    "DELETED",
+  ]) {
     const api = createRealApi(async () => ({
       success: true,
-      data: { document: { ...documentProjection, status, failureCode: status === "FAILED" ? "PARSE_FAILED" : null, failureMessage: status === "FAILED" ? "The file could not be processed within supported format or size limits." : null, canRetry: false } },
+      data: {
+        document: {
+          ...documentProjection,
+          status,
+          failureCode: status === "FAILED" ? "PARSE_FAILED" : null,
+          failureMessage:
+            status === "FAILED"
+              ? "The file could not be processed within supported format or size limits."
+              : null,
+          canRetry: false,
+        },
+      },
     }));
     const document = await api.getDocument("7");
     expect(document.status).toBe(status.toLowerCase());
@@ -123,7 +154,11 @@ test("real adapter maps backend envelopes, pagination, numeric IDs, and chat kno
         success: true,
         data: {
           message: message(2, "user", "What should I check?"),
-          assistantMessage: message(3, "assistant", "Check the current notice."),
+          assistantMessage: message(
+            3,
+            "assistant",
+            "Check the current notice.",
+          ),
           knowledge: {
             status: "evidence_cited",
             answerVerification: "not_evaluated",
@@ -163,13 +198,15 @@ test("real adapter maps backend envelopes, pagination, numeric IDs, and chat kno
   const history = await api.listMessages("1");
   expect(history[0].id).toBe("2");
 
-  const event = (await Array.fromAsync(
-    api.sendMessage("1", {
-      content: "What should I check?",
-      documentIds: [],
-      requestId: "request_1",
-    }),
-  ))[0];
+  const event = (
+    await Array.fromAsync(
+      api.sendMessage("1", {
+        content: "What should I check?",
+        documentIds: [],
+        requestId: "request_1",
+      }),
+    )
+  )[0];
   expect(event.type).toBe("complete");
   if (event.type === "complete") {
     expect(event.assistantMessage?.sources[0]).toMatchObject({
@@ -178,12 +215,16 @@ test("real adapter maps backend envelopes, pagination, numeric IDs, and chat kno
     });
     expect(event.conversation).toBeUndefined();
   }
-  const sendCall = calls.find((call) => call.path === "/api/v1/conversations/1/messages");
+  const sendCall = calls.find(
+    (call) => call.path === "/api/v1/conversations/1/messages",
+  );
   expect(JSON.parse(String(sendCall?.options.body))).toEqual({
     content: "What should I check?",
     role: "user",
   });
-  expect(new Headers(sendCall?.options.headers).get("Idempotency-Key")).toBe("request_1");
+  expect(new Headers(sendCall?.options.headers).get("Idempotency-Key")).toBe(
+    "request_1",
+  );
 });
 
 test("real adapter uses the raw upload contract and document lifecycle endpoints", async () => {
@@ -191,11 +232,20 @@ test("real adapter uses the raw upload contract and document lifecycle endpoints
   const api = createRealApi(async (path, options = {}) => {
     calls.push({ path, options });
     if (path === "/api/v1/documents/upload")
-      return { success: true, data: { document: documentProjection, deduplicated: false } };
+      return {
+        success: true,
+        data: { document: documentProjection, deduplicated: false },
+      };
     if (path === "/api/v1/documents/7/process")
-      return { success: true, data: { document: documentProjection, queued: true } };
+      return {
+        success: true,
+        data: { document: documentProjection, queued: true },
+      };
     if (path === "/api/v1/documents/7/retry")
-      return { success: true, data: { document: documentProjection, queued: true } };
+      return {
+        success: true,
+        data: { document: documentProjection, queued: true },
+      };
     throw new Error(`Unexpected transport path: ${path}`);
   });
   const file = new File(["hello"], "notes.txt", { type: "text/plain" });
@@ -206,7 +256,9 @@ test("real adapter uses the raw upload contract and document lifecycle endpoints
   await api.retryDocument("7");
   const uploadCall = calls[0];
   expect(uploadCall.path).toBe("/api/v1/documents/upload");
-  expect(Object.fromEntries(new Headers(uploadCall.options.headers))).toMatchObject({
+  expect(
+    Object.fromEntries(new Headers(uploadCall.options.headers)),
+  ).toMatchObject({
     "content-type": "text/plain",
     "x-document-filename": "notes.txt",
     "x-document-display-name": "notes.txt",

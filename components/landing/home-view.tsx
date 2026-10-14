@@ -255,7 +255,9 @@ export function HomeView() {
       <section className="bg-[#091d39] py-12 text-white">
         <div className="container-page grid items-center gap-5 md:grid-cols-[1fr_auto]">
           <div>
-            <p className="eyebrow text-[#83c9ff]">{t("home.clarityEyebrow")}</p>
+            <p className="eyebrow eyebrow-on-dark">
+              {t("home.clarityEyebrow")}
+            </p>
             <h2 className="editorial mt-2 text-3xl sm:text-4xl">
               {t("home.clarityTitle")}
             </h2>
@@ -407,7 +409,7 @@ export function HomeView() {
               key={number}
               className="rounded-[20px] border border-line bg-white p-6"
             >
-              <p className="text-4xl font-black tracking-tight text-[#d5e4f9]">
+              <p className="text-4xl font-black tracking-tight text-[#56647a]">
                 {number}
               </p>
               <h3 className="mt-4 text-lg font-extrabold">
@@ -469,7 +471,7 @@ export function HomeView() {
             className="absolute -right-6 -bottom-8 rotate-[-12deg] text-white/10 sm:right-8"
           />
           <div className="relative max-w-2xl">
-            <p className="mb-4 text-[10px] font-extrabold tracking-[.2em] text-white/75">
+            <p className="mb-4 text-[10px] font-extrabold tracking-[.2em] text-white">
               {t("home.nextStep")}
             </p>
             <h2 className="editorial text-3xl sm:text-5xl">

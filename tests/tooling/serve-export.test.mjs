@@ -12,11 +12,11 @@ async function freePort() {
   server.listen(0, "127.0.0.1");
   await once(server, "listening");
   const { port } = server.address();
-  await new Promise(resolve => server.close(resolve));
+  await new Promise((resolve) => server.close(resolve));
   return port;
 }
 
-test("static export server serves clean URLs and assets, supports HEAD, and blocks traversal", async t => {
+test("static export server serves clean URLs and assets, supports HEAD, and blocks traversal", async (t) => {
   const directory = await mkdtemp(path.join(os.tmpdir(), "admitics-export-"));
   const port = await freePort();
   await mkdir(path.join(directory, "about"));
@@ -26,9 +26,14 @@ test("static export server serves clean URLs and assets, supports HEAD, and bloc
   await writeFile(path.join(directory, "app.js"), "console.log('ok')");
   const outside = `${directory}-outside`;
   await writeFile(outside, "private");
-  const child = spawn(process.execPath, ["scripts/serve-export.mjs", "--dir", directory, "--port", String(port)], {
-    cwd: new URL("../..", import.meta.url), stdio: "ignore",
-  });
+  const child = spawn(
+    process.execPath,
+    ["scripts/serve-export.mjs", "--dir", directory, "--port", String(port)],
+    {
+      cwd: new URL("../..", import.meta.url),
+      stdio: "ignore",
+    },
+  );
   t.after(async () => {
     child.kill("SIGTERM");
     await rm(directory, { recursive: true, force: true });
@@ -37,7 +42,13 @@ test("static export server serves clean URLs and assets, supports HEAD, and bloc
   const origin = `http://127.0.0.1:${port}`;
   let ready = false;
   for (let attempt = 0; attempt < 60; attempt++) {
-    try { await fetch(origin); ready = true; break; } catch { await new Promise(resolve => setTimeout(resolve, 50)); }
+    try {
+      await fetch(origin);
+      ready = true;
+      break;
+    } catch {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    }
   }
   assert.ok(ready, "server should start");
 
@@ -57,7 +68,10 @@ test("static export server serves clean URLs and assets, supports HEAD, and bloc
   const missingHead = await fetch(`${origin}/missing`, { method: "HEAD" });
   assert.equal(missingHead.status, 404);
   assert.equal(await missingHead.text(), "");
-  assert.equal((await fetch(`${origin}/%2e%2e%2f${path.basename(outside)}`)).status, 400);
+  assert.equal(
+    (await fetch(`${origin}/%2e%2e%2f${path.basename(outside)}`)).status,
+    400,
+  );
   const method = await fetch(origin, { method: "POST" });
   assert.equal(method.status, 405);
 });

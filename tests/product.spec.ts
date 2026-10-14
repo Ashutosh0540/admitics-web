@@ -138,7 +138,11 @@ test("opportunity topic selector submits its prompt to chat", async ({
   page,
 }) => {
   await page.goto("/");
-  await page.locator("#opportunity-topic").selectOption("abroad");
+  const topicSelect = page.locator("#opportunity-topic");
+  // The static export briefly contains Next.js's hidden streamed copy of
+  // suspended content while it swaps in the completed segment.
+  await expect(topicSelect).toHaveCount(1);
+  await topicSelect.selectOption("abroad");
   await page.getByRole("button", { name: "Plan your next steps" }).click();
   const savedQuestion = page.getByRole("article", { name: "Your question" });
   await expect(savedQuestion).toHaveCount(1);

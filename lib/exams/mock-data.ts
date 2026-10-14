@@ -136,7 +136,8 @@ export const demoExams: Exam[] = [
         label: "I have checked the required subject combination",
         type: "boolean",
         required: true,
-        helpText: "This confirmation is a demo field, not a substitute for the official notice.",
+        helpText:
+          "This confirmation is a demo field, not a substitute for the official notice.",
       },
     ],
     sources: [
@@ -287,7 +288,8 @@ export const demoExams: Exam[] = [
         label: "I have checked the subject combination for my target course",
         type: "boolean",
         required: true,
-        helpText: "Course and university criteria still need official confirmation.",
+        helpText:
+          "Course and university criteria still need official confirmation.",
       },
     ],
     sources: [
@@ -438,7 +440,8 @@ export const demoExams: Exam[] = [
         label: "I have checked the required subject combination",
         type: "boolean",
         required: true,
-        helpText: "This confirmation is a demo field, not a substitute for the official notice.",
+        helpText:
+          "This confirmation is a demo field, not a substitute for the official notice.",
       },
     ],
     sources: [
@@ -590,7 +593,8 @@ export const demoExams: Exam[] = [
         label: "I have checked that my degree is relevant to the paper",
         type: "boolean",
         required: true,
-        helpText: "This confirmation is a demo field, not a substitute for the official notice.",
+        helpText:
+          "This confirmation is a demo field, not a substitute for the official notice.",
       },
     ],
     sources: [

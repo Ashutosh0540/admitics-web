@@ -157,10 +157,12 @@ function identity(user: import("@supabase/supabase-js").User): User {
 }
 function authError(error: { code?: string } | null, fallback: string): never {
   const messages: Record<string, string> = {
-    invalid_credentials: "That email and password combination wasn't recognised. Please try again.",
+    invalid_credentials:
+      "That email and password combination wasn't recognised. Please try again.",
     email_not_confirmed: "Please confirm your email before logging in.",
     weak_password: "Choose a stronger password and try again.",
-    over_request_rate_limit: "Too many sign-in attempts. Please wait a little and try again.",
+    over_request_rate_limit:
+      "Too many sign-in attempts. Please wait a little and try again.",
     over_email_send_rate_limit: "Please wait before requesting another email.",
   };
   throw new Error((error?.code && messages[error.code]) || fallback);
@@ -168,19 +170,28 @@ function authError(error: { code?: string } | null, fallback: string): never {
 const supabaseAuth: AuthAdapter = {
   async getSession() {
     const { data, error } = await (await supabase()).auth.getSession();
-    if (error) authError(error, "We couldn't restore your session. Please log in again.");
+    if (error)
+      authError(
+        error,
+        "We couldn't restore your session. Please log in again.",
+      );
     return data.session ? identity(data.session.user) : null;
   },
   async getAccessToken() {
     const { data, error } = await (await supabase()).auth.getSession();
-    if (error) authError(error, "We couldn't refresh your session. Please log in again.");
+    if (error)
+      authError(
+        error,
+        "We couldn't refresh your session. Please log in again.",
+      );
     return data.session?.access_token ?? null;
   },
   async signIn(email, password) {
     const { data, error } = await (
       await supabase()
     ).auth.signInWithPassword({ email, password });
-    if (error) authError(error, "Sign-in could not be completed. Please try again.");
+    if (error)
+      authError(error, "Sign-in could not be completed. Please try again.");
     return identity(data.user);
   },
   async signUp(name, email, password, returnTo = "/dashboard") {
@@ -196,7 +207,8 @@ const supabaseAuth: AuthAdapter = {
         )}`,
       },
     });
-    if (error) authError(error, "Sign-up could not be completed. Please try again.");
+    if (error)
+      authError(error, "Sign-up could not be completed. Please try again.");
     return data.session && data.user ? identity(data.user) : null;
   },
   async signInWithGoogle(returnTo = "/dashboard") {
@@ -210,11 +222,16 @@ const supabaseAuth: AuthAdapter = {
         )}`,
       },
     });
-    if (error) authError(error, "Google sign-in could not be started. Please try again.");
+    if (error)
+      authError(
+        error,
+        "Google sign-in could not be started. Please try again.",
+      );
   },
   async completeAuthCallback(code) {
     if (callbackCompletion) return callbackCompletion;
-    if (!code) throw new Error("Sign-in could not be completed. Please try again.");
+    if (!code)
+      throw new Error("Sign-in could not be completed. Please try again.");
     callbackCompletion = (async () => {
       const { data, error } = await (
         await supabase()
@@ -227,7 +244,8 @@ const supabaseAuth: AuthAdapter = {
   },
   async signOut() {
     const { error } = await (await supabase()).auth.signOut({ scope: "local" });
-    if (error) authError(error, "Sign-out could not be completed. Please try again.");
+    if (error)
+      authError(error, "Sign-out could not be completed. Please try again.");
   },
   async resetPassword(email) {
     const { error } = await (
@@ -235,17 +253,29 @@ const supabaseAuth: AuthAdapter = {
     ).auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/auth/callback?next=%2Freset-password`,
     });
-    if (error) authError(error, "The recovery email could not be requested. Please try again.");
+    if (error)
+      authError(
+        error,
+        "The recovery email could not be requested. Please try again.",
+      );
   },
   async updatePassword(password) {
     const { error } = await (await supabase()).auth.updateUser({ password });
-    if (error) authError(error, "Your password could not be updated. Please request a new recovery link.");
+    if (error)
+      authError(
+        error,
+        "Your password could not be updated. Please request a new recovery link.",
+      );
   },
   async updateProfile(name) {
     const { error } = await (
       await supabase()
     ).auth.updateUser({ data: { name } });
-    if (error) authError(error, "Your display name could not be updated. Please try again.");
+    if (error)
+      authError(
+        error,
+        "Your display name could not be updated. Please try again.",
+      );
   },
   subscribe(listener) {
     let disposed = false;

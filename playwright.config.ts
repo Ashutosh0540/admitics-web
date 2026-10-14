@@ -30,6 +30,17 @@ export default defineConfig({
     url: "http://127.0.0.1:3100",
     reuseExistingServer: false,
     timeout: 60000,
-    env: { NEXT_PUBLIC_API_MODE: "mock", NEXT_PUBLIC_AUTH_MODE: "mock" },
+    env: {
+      NEXT_PUBLIC_API_MODE: "mock",
+      NEXT_PUBLIC_AUTH_MODE: "mock",
+      NEXT_PUBLIC_API_BASE_URL: "",
+      NEXT_PUBLIC_SITE_URL: "http://127.0.0.1:3100",
+      NEXT_PUBLIC_SUPABASE_URL: "",
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "",
+      NEXT_PUBLIC_AI_ENABLED: "true",
+      NEXT_PUBLIC_DOCUMENTS_ENABLED: "true",
+      NEXT_PUBLIC_DOCUMENT_PROCESSING_ENABLED: "true",
+      NEXT_PUBLIC_PRODUCT_CONTROLS_ENABLED: "true",
+    },
   },
 });

@@ -38,7 +38,9 @@ const isSource = (v: unknown): v is Source =>
   text(v.id) &&
   text(v.title) &&
   text(v.publisher) &&
-  ["official", "secondary", "document", "unverified"].includes(String(v.kind)) &&
+  ["official", "secondary", "document", "unverified"].includes(
+    String(v.kind),
+  ) &&
   (v.url === undefined || text(v.url));
 export function isMessage(v: unknown): v is Message {
   if (!(
@@ -170,9 +172,7 @@ export const isExam = (v: unknown): v is Exam =>
   v.eligibilityFields.every(isEligibilityField) &&
   Array.isArray(v.sources) &&
   v.sources.every(isExamSource) &&
-  ["verified", "needs-review", "demo"].includes(
-    String(v.verificationStatus),
-  ) &&
+  ["verified", "needs-review", "demo"].includes(String(v.verificationStatus)) &&
   text(v.verificationNote) &&
   typeof v.isDemo === "boolean";
 const quota = (v: unknown) => object(v) && number(v.used) && number(v.limit);

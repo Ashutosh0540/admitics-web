@@ -79,13 +79,13 @@ function DashboardInner() {
                     className="absolute -right-3 -bottom-3 size-32 text-white/10"
                     strokeWidth={1}
                   />
-                  <p className="text-xs font-medium text-white/70">
+                  <p className="text-xs font-medium text-white">
                     {t("dashboard.oneQuestion")}
                   </p>
                   <h2 className="editorial mt-4 text-3xl">
                     {t("dashboard.nextStep")}
                   </h2>
-                  <p className="mt-3 max-w-md text-xs leading-6 text-white/80">
+                  <p className="mt-3 max-w-md text-xs leading-6 text-white">
                     {t("dashboard.nextStepCopy")}
                   </p>
                   <ButtonLink

@@ -7,10 +7,7 @@ export type ExamCategory =
   | "Postgraduate study";
 
 export type ExamApplicationCode =
-  | "open"
-  | "opening-soon"
-  | "closed"
-  | "not-published";
+  "open" | "opening-soon" | "closed" | "not-published";
 
 export type ExamDateKind =
   | "registration-open"
@@ -43,11 +40,7 @@ export type EligibilityFieldKey =
   | (string & {});
 
 export type EligibilityRuleOperator =
-  | "equals"
-  | "one-of"
-  | "at-least"
-  | "between"
-  | "is-true";
+  "equals" | "one-of" | "at-least" | "between" | "is-true";
 
 export interface EligibilityRule {
   id: string;
@@ -77,9 +70,7 @@ export interface EligibilityField {
 }
 
 export type ExamSourceKind =
-  | "official-notice"
-  | "application-portal"
-  | "counselling-portal";
+  "official-notice" | "application-portal" | "counselling-portal";
 
 export type ExamSourceVerification = "verified" | "needs-review" | "demo";
 
@@ -130,9 +121,7 @@ export interface EligibilityProfile {
 }
 
 export type EligibilityResultStatus =
-  | "eligible"
-  | "not-eligible"
-  | "insufficient-information";
+  "eligible" | "not-eligible" | "insufficient-information";
 
 export interface EligibilityResult {
   status: EligibilityResultStatus;

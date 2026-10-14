@@ -4,7 +4,7 @@
   --font-sans: "DM Sans Variable", "DM Sans", system-ui, sans-serif;
   --font-display: "DM Sans Variable", "DM Sans", system-ui, sans-serif;
   --color-ink: #11223c;
-  --color-muted: #647189;
+  --color-muted: #56647a;
   --color-brand: #225ae2;
   --color-brand-dark: #1644ad;
   --color-mint: #eaf1ff;
@@ -84,6 +84,9 @@ section[id] {
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--color-brand);
+}
+.eyebrow-on-dark {
+  color: #83c9ff;
 }
 .editorial {
   font-family: var(--font-display);

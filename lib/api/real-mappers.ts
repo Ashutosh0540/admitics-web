@@ -38,7 +38,9 @@ function dateFromUnix(value: unknown, field: string) {
   return date.toISOString();
 }
 
-export function contractMismatch(message = "The API response does not match the frontend contract.") {
+export function contractMismatch(
+  message = "The API response does not match the frontend contract.",
+) {
   return new ApiClientError(
     "CONTRACT_MISMATCH",
     `${message} Please try again after integration is configured.`,
@@ -92,46 +94,83 @@ function mapKnowledge(value: unknown): {
     throw contractMismatch("Expected source metadata.");
   const citations = value.citations.flatMap((item): KnowledgeCitation[] => {
     if (!record(item)) throw contractMismatch("Expected citation metadata.");
-    const sourceType = stringValue(item.sourceType, "knowledge.citation.sourceType");
-    const trust = stringValue(item.trust, "knowledge.citation.trust") as Source["trust"];
+    const sourceType = stringValue(
+      item.sourceType,
+      "knowledge.citation.sourceType",
+    );
+    const trust = stringValue(
+      item.trust,
+      "knowledge.citation.trust",
+    ) as Source["trust"];
     const verification = record(item.verification) ? item.verification : null;
     const status = verification
-      ? (stringValue(verification.status, "knowledge.citation.verification.status") as Source["verificationStatus"])
+      ? (stringValue(
+          verification.status,
+          "knowledge.citation.verification.status",
+        ) as Source["verificationStatus"])
       : undefined;
     if (
       !["web", "document", "dataset", "manual"].includes(sourceType) ||
-      !["official", "trusted_secondary", "unverified", "disallowed"].includes(String(trust)) ||
+      !["official", "trusted_secondary", "unverified", "disallowed"].includes(
+        String(trust),
+      ) ||
       !["pending", "verified", "expired", "rejected"].includes(String(status))
-    ) throw contractMismatch("Expected source trust and verification metadata.");
+    )
+      throw contractMismatch(
+        "Expected source trust and verification metadata.",
+      );
     const reviewAfter = verification?.reviewAfter;
     return [
       {
         id: stringValue(item.id, "knowledge.citation.id"),
         sourceId: stringValue(item.sourceId, "knowledge.citation.sourceId"),
-        sourceTitle: stringValue(item.sourceTitle, "knowledge.citation.sourceTitle"),
+        sourceTitle: stringValue(
+          item.sourceTitle,
+          "knowledge.citation.sourceTitle",
+        ),
         sourceType,
         publisher: stringValue(item.publisher, "knowledge.citation.publisher"),
-        canonicalUrl: nullableString(item.canonicalUrl, "knowledge.citation.canonicalUrl"),
+        canonicalUrl: nullableString(
+          item.canonicalUrl,
+          "knowledge.citation.canonicalUrl",
+        ),
         trust,
         verificationStatus: status,
-        reviewAfter: reviewAfter === null || reviewAfter === undefined
-          ? null
-          : dateFromUnix(reviewAfter, "knowledge.citation.verification.reviewAfter"),
+        reviewAfter:
+          reviewAfter === null || reviewAfter === undefined
+            ? null
+            : dateFromUnix(
+                reviewAfter,
+                "knowledge.citation.verification.reviewAfter",
+              ),
       },
     ];
   });
   const sources = citations
-    .filter((citation, index, all) => all.findIndex((item) => item.sourceId === citation.sourceId) === index)
-    .map((citation) => ({
-      id: citation.sourceId,
-      title: citation.sourceTitle,
-      url: citation.canonicalUrl ?? undefined,
-      publisher: citation.publisher,
-      kind: citation.sourceType === "document" ? "document" : citation.trust === "trusted_secondary" ? "secondary" : citation.trust === "official" ? "official" : "unverified",
-      trust: citation.trust,
-      verificationStatus: citation.verificationStatus,
-      reviewAfter: citation.reviewAfter,
-    } satisfies Source));
+    .filter(
+      (citation, index, all) =>
+        all.findIndex((item) => item.sourceId === citation.sourceId) === index,
+    )
+    .map(
+      (citation) =>
+        ({
+          id: citation.sourceId,
+          title: citation.sourceTitle,
+          url: citation.canonicalUrl ?? undefined,
+          publisher: citation.publisher,
+          kind:
+            citation.sourceType === "document"
+              ? "document"
+              : citation.trust === "trusted_secondary"
+                ? "secondary"
+                : citation.trust === "official"
+                  ? "official"
+                  : "unverified",
+          trust: citation.trust,
+          verificationStatus: citation.verificationStatus,
+          reviewAfter: citation.reviewAfter,
+        }) satisfies Source,
+    );
   return {
     sources,
     citations: citations.map((citation) => ({
@@ -144,22 +183,42 @@ function mapKnowledge(value: unknown): {
 
 export function mapMessage(value: unknown, knowledge?: unknown): Message {
   if (!record(value)) throw contractMismatch();
-  const mappedKnowledge = knowledge ? mapKnowledge(knowledge) : { sources: [], citations: [] };
+  const mappedKnowledge = knowledge
+    ? mapKnowledge(knowledge)
+    : { sources: [], citations: [] };
   return {
     id: String(integerValue(value.id, "message.id")),
-    conversationId: String(integerValue(value.conversationId, "message.conversationId")),
-    role: value.role === "assistant" ? "assistant" : value.role === "user" ? "user" : (() => { throw contractMismatch(); })(),
+    conversationId: String(
+      integerValue(value.conversationId, "message.conversationId"),
+    ),
+    role:
+      value.role === "assistant"
+        ? "assistant"
+        : value.role === "user"
+          ? "user"
+          : (() => {
+              throw contractMismatch();
+            })(),
     // The backend's grounded-response text includes its citation snapshot. Only
     // remove it when the POST also supplies corresponding structured metadata;
     // history text alone is never promoted into verified source information.
-    content: knowledge && mappedKnowledge.citations.length
-      ? stringValue(value.content, "message.content").split("\n\nSources (evidence metadata; answer not independently verified):\n")[0]
-      : stringValue(value.content, "message.content"),
+    content:
+      knowledge && mappedKnowledge.citations.length
+        ? stringValue(value.content, "message.content").split(
+            "\n\nSources (evidence metadata; answer not independently verified):\n",
+          )[0]
+        : stringValue(value.content, "message.content"),
     createdAt: dateFromUnix(value.createdAt, "message.createdAt"),
     sources: mappedKnowledge.sources,
     citations: mappedKnowledge.citations,
-    ...(record(knowledge) && ["not_evaluated", "abstained"].includes(String(knowledge.answerVerification))
-      ? { answerVerification: knowledge.answerVerification as "not_evaluated" | "abstained" }
+    ...(record(knowledge) &&
+    ["not_evaluated", "abstained"].includes(
+      String(knowledge.answerVerification),
+    )
+      ? {
+          answerVerification: knowledge.answerVerification as
+            "not_evaluated" | "abstained",
+        }
       : {}),
     documentIds: [],
   };
@@ -180,18 +239,24 @@ export function mapDocument(value: unknown): Document {
   const rawStatus = stringValue(value.status, "document.status");
   const status = documentStatus[rawStatus];
   if (!status) throw contractMismatch("Expected a supported document status.");
-  const failureMessage = value.failureMessage === null
-    ? null
-    : nullableString(value.failureMessage, "document.failureMessage");
+  const failureMessage =
+    value.failureMessage === null
+      ? null
+      : nullableString(value.failureMessage, "document.failureMessage");
   return {
     id: String(integerValue(value.id, "document.id")),
-    name: stringValue(value.displayName ?? value.filename, "document.displayName"),
+    name: stringValue(
+      value.displayName ?? value.filename,
+      "document.displayName",
+    ),
     mimeType: stringValue(value.mimeType, "document.mimeType"),
     size: integerValue(value.sizeBytes, "document.sizeBytes"),
     status,
     createdAt: dateFromUnix(value.createdAt, "document.createdAt"),
     updatedAt: dateFromUnix(value.updatedAt, "document.updatedAt"),
-    statusDescription: nullableString(value.statusDescription, "document.statusDescription") ?? undefined,
+    statusDescription:
+      nullableString(value.statusDescription, "document.statusDescription") ??
+      undefined,
     canRetry: value.canRetry === true,
     failureCode: nullableString(value.failureCode, "document.failureCode"),
     failureMessage,
@@ -202,14 +267,24 @@ export function mapDocument(value: unknown): Document {
 export function mapUsage(value: unknown): Usage {
   if (!record(value) || !record(value.limits) || !record(value.used))
     throw contractMismatch();
-  const numberAt = (group: RecordValue, key: string) => integerValue(group[key], `usage.${key}`);
+  const numberAt = (group: RecordValue, key: string) =>
+    integerValue(group[key], `usage.${key}`);
   const maxFileBytes = numberAt(value.limits, "file_bytes");
   return {
     plan: "Current limits",
     periodEnd: dateFromUnix(value.periodEnd, "usage.periodEnd"),
-    messages: { used: numberAt(value.used, "messages"), limit: numberAt(value.limits, "messages") },
-    documents: { used: numberAt(value.used, "documents"), limit: numberAt(value.limits, "documents") },
-    storage: { used: numberAt(value.used, "storage_bytes"), limit: numberAt(value.limits, "storage_bytes") },
+    messages: {
+      used: numberAt(value.used, "messages"),
+      limit: numberAt(value.limits, "messages"),
+    },
+    documents: {
+      used: numberAt(value.used, "documents"),
+      limit: numberAt(value.limits, "documents"),
+    },
+    storage: {
+      used: numberAt(value.used, "storage_bytes"),
+      limit: numberAt(value.limits, "storage_bytes"),
+    },
     uploadLimits: {
       maxFileBytes,
       allowedMimeTypes: [
