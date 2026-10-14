@@ -1,5 +1,6 @@
 import { config, safeNext } from "@/lib/config";
 import type { User } from "@/types";
+import { createCallbackCompleter } from "./callback";
 
 export interface AuthAdapter {
   getSession(): Promise<User | null>;
@@ -116,7 +117,6 @@ const mockAuth: AuthAdapter = {
 
 type SupabaseClient = import("@supabase/supabase-js").SupabaseClient;
 let clientPromise: Promise<SupabaseClient> | undefined;
-let callbackCompletion: Promise<User> | undefined;
 async function supabase() {
   if (!config.supabaseUrl || !config.supabaseKey)
     throw new Error(
@@ -228,20 +228,14 @@ const supabaseAuth: AuthAdapter = {
         "Google sign-in could not be started. Please try again.",
       );
   },
-  async completeAuthCallback(code) {
-    if (callbackCompletion) return callbackCompletion;
-    if (!code)
+  completeAuthCallback: createCallbackCompleter(async (code) => {
+    const { data, error } = await (
+      await supabase()
+    ).auth.exchangeCodeForSession(code);
+    if (error || !data.user)
       throw new Error("Sign-in could not be completed. Please try again.");
-    callbackCompletion = (async () => {
-      const { data, error } = await (
-        await supabase()
-      ).auth.exchangeCodeForSession(code);
-      if (error || !data.user)
-        throw new Error("Sign-in could not be completed. Please try again.");
-      return identity(data.user);
-    })();
-    return callbackCompletion;
-  },
+    return identity(data.user);
+  }),
   async signOut() {
     const { error } = await (await supabase()).auth.signOut({ scope: "local" });
     if (error)

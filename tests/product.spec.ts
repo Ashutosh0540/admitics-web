@@ -545,6 +545,22 @@ test("authentication recovery and Google expose configuration honestly", async (
   ).toBeVisible();
 });
 
+test("callback reports provider errors and missing codes without treating a session as success", async ({
+  page,
+}) => {
+  await page.goto("/auth/callback?error=access_denied&next=%2Fsettings");
+  await expect(page.getByRole("main").getByRole("alert")).toContainText(
+    "Sign-in was cancelled",
+  );
+  await expect(page).toHaveURL("/auth/callback");
+
+  await page.goto("/auth/callback");
+  await expect(page.getByRole("main").getByRole("alert")).toContainText(
+    "missing its authorization code",
+  );
+  await expect(page).toHaveURL("/auth/callback");
+});
+
 test("narrow phones, tablets and laptops keep product surfaces usable", async ({
   page,
 }) => {

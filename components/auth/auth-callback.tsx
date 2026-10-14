@@ -1,29 +1,27 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getAuth } from "@/lib/auth";
+import { completeAuthCallback } from "@/lib/auth/callback";
 import { errorMessage } from "@/lib/api/errors";
-import { safeNext } from "@/lib/config";
 import { ErrorState, LoadingState } from "@/components/ui/primitives";
 import { ButtonLink } from "@/components/ui/button";
 
 export function AuthCallback() {
   const router = useRouter();
   const [error, setError] = useState("");
+  const completion = useRef<Promise<string> | null>(null);
   useEffect(() => {
     let active = true;
-    const url = new URL(window.location.href);
-    const failed =
-      url.searchParams.has("error") ||
-      new URLSearchParams(url.hash.slice(1)).has("error");
-    const code = failed ? null : url.searchParams.get("code");
-    const next = safeNext(url.searchParams.get("next"));
-    window.history.replaceState(null, "", "/auth/callback");
-    void getAuth()
-      .completeAuthCallback(code ?? "")
-      .then((user) => {
-        if (!active) return;
-        if (user) router.replace(next);
+    completion.current ??= completeAuthCallback(
+      new URL(window.location.href),
+      (code) => getAuth().completeAuthCallback(code),
+      () =>
+        window.history.replaceState(window.history.state, "", "/auth/callback"),
+    );
+    void completion.current
+      .then((destination) => {
+        if (active) router.replace(destination);
       })
       .catch((reason) => {
         if (active) setError(errorMessage(reason));
