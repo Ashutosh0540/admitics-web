@@ -27,6 +27,7 @@ npm install
 npm run typecheck
 npm run lint
 npm run build
+npm run build:production
 npx playwright install chromium
 npm run test:local
 npm test
@@ -39,6 +40,41 @@ clean route URLs and files such as `/_next/static/...`. `npm test` serves the ex
 Set `NEXT_PUBLIC_API_MODE=mock` and `NEXT_PUBLIC_AUTH_MODE=mock` when building to exercise
 the local preview; those are also the browser test server defaults. `npm run test:local`
 runs focused Node tests for translation catalogs and static export serving without a browser.
+
+### Production static export
+
+`NEXT_PUBLIC_*` values are compiled into the browser assets during `next build`; changing
+hosting environment variables after the build does not change the export. Configure these
+values in the build environment for the production Pages project, then run
+`npm run build:production`:
+
+```text
+NEXT_PUBLIC_API_MODE=real
+NEXT_PUBLIC_AUTH_MODE=supabase
+NEXT_PUBLIC_API_BASE_URL=https://admitics-ai-worker-production.dr-csrraju.workers.dev
+NEXT_PUBLIC_SITE_URL=https://app.admitics.org
+NEXT_PUBLIC_SUPABASE_URL=https://hdvbwzsfglexhzqorkml.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<operator-provided Supabase publishable key>
+NEXT_PUBLIC_AI_ENABLED=false
+NEXT_PUBLIC_DOCUMENTS_ENABLED=false
+NEXT_PUBLIC_DOCUMENT_PROCESSING_ENABLED=false
+NEXT_PUBLIC_PRODUCT_CONTROLS_ENABLED=false
+```
+
+The production command runs `scripts/check-production-env.mjs` before building. It loads
+Next.js production `.env*` files and validates the required modes, approved HTTPS URLs,
+non-empty publishable key, and disabled initial-release capabilities. It reports variable
+names and validation reasons only; it never prints configured values. The existing
+`npm run build` remains the generic build command used by isolated preview/test workflows.
+Do not use `.env.example` for production: it contains local mock defaults. `.env*` files
+are ignored by Git except for that template. Keep private server credentials out of every
+`NEXT_PUBLIC_*` variable; Next.js exposes those values in browser bundles. The Supabase
+publishable key is intended for browser use and is not a substitute for a private key.
+
+After building, inspect the generated `out/` export before publishing. A static export
+freezes these settings into its HTML/JavaScript and cannot consume Pages runtime variables.
+Cloudflare Pages must serve clean route URLs and the `public/_headers` security headers;
+verify both on the live deployment before release.
 
 ### Staging UI capabilities
 
